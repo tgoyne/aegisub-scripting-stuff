@@ -75,21 +75,13 @@ class Label extends Control
     @props = new_props
     false
 
-class Column extends Control
+class Container extends Control
   do_build: (parent, component) =>
-    @component = component
     @sizer = wxm.BoxSizer wxm.VERTICAL
     @window = parent.window
     for child in *@props.items
-      @sizer\Add child\build @, component
-    @sizer
-
-  destroy: =>
-    if @control
-      @control\Clear true
-
-  add: (control) =>
-    @sizer\Add control
+      @add child\build @, component
+    nil
 
   update: (new_props) =>
     if not new_props
@@ -109,7 +101,7 @@ class Column extends Control
       new = new_items[i]
       old = old_items[i]
       if new and not old
-        @sizer\Add new\build @, @component
+        @add new\build @, @component
         any = true
         table.insert(old_items, new)
       else if old and not new
@@ -122,11 +114,24 @@ class Column extends Control
           any or= did_update
         else
           old\destroy!
-          @sizer\Add new\build @, @component
+          @add new\build @, @component
           any = true
           old_items[i] = new
 
     any
+
+class Column extends Container
+  do_build: (parent, component) =>
+    @sizer = wxm.BoxSizer wxm.VERTICAL
+    super parent, component
+    @sizer
+
+  destroy: =>
+    if @control
+      @control\Clear true
+
+  add: (control) =>
+    @sizer\Add control
 
 class TextCtrl extends Control
   do_build: (parent, component) =>
