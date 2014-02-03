@@ -10,8 +10,9 @@ class Component
     if @initial_state
       @state = @initial_state!
 
-  build: (parent) =>
+  build: (parent, component) =>
     @parent = parent
+    @component = component
     @destroy!
     @child = @render!
     @child\build parent, @
@@ -26,7 +27,7 @@ class Component
 
   call: (name, value) =>
     if @props[name]
-      @props[name](value)
+      @props[name](@component, value)
 
   update: (new_props) =>
     if new_props
@@ -133,6 +134,19 @@ class Column extends Container
   add: (control) =>
     @sizer\Add control
 
+class Row extends Container
+  do_build: (parent, component) =>
+    @sizer = wxm.BoxSizer wxm.HORIZONTAL
+    super parent, component
+    @sizer
+
+  destroy: =>
+    if @control
+      @control\Clear true
+
+  add: (control) =>
+    @sizer\Add control
+
 class TextCtrl extends Control
   do_build: (parent, component) =>
     ctrl = wxm.TextCtrl parent.window, -1, @props.value
@@ -165,7 +179,6 @@ class Button extends Control
 
 class Window
   new: (opts) =>
-    moon.p opts
     @title = opts.title
     @contents = opts.contents
 
@@ -191,4 +204,4 @@ class Window
   update: =>
     @contents\update!
 
-{:Label, :Window, :Component, :Column, :TextCtrl, :Button}
+{:Label, :Window, :Component, :Column, :TextCtrl, :Button, :Row}
