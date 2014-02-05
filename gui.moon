@@ -131,7 +131,10 @@ class Sizer extends Container
       @control\Clear true
 
   add: (control) =>
-    @sizer\Add control
+    flags = wxm.SizerFlags()
+    flags = flags\Expand()
+    flags = flags\Border()
+    @sizer\Add control, flags
 
 class Column extends Sizer
   dir: wxm.VERTICAL
@@ -169,12 +172,18 @@ class Button extends Control
     if @props.on_click
       btn\Connect wxm.EVT_COMMAND_BUTTON_CLICKED, ->
         @props.on_click component
+    @props.enable = true if @props.enable == nil
+    if not @props.enable
+      btn\Enable false
     btn
 
   update: (new_props) =>
     return unless new_props
     if new_props.label != @props.label
       @control\SetLabel new_props.value
+    new_props.enable = true if new_props.enable == nil
+    if new_props.enable != @props.enable
+      @control\Enable new_props.enable
     @props = new_props
     false
 
