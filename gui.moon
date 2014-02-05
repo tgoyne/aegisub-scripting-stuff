@@ -78,7 +78,6 @@ class Label extends Control
 
 class Container extends Control
   do_build: (parent, component) =>
-    @sizer = wxm.BoxSizer wxm.VERTICAL
     @window = parent.window
     for child in *@props.items
       @add child\build @, component
@@ -121,9 +120,9 @@ class Container extends Control
 
     any
 
-class Column extends Container
+class Sizer extends Container
   do_build: (parent, component) =>
-    @sizer = wxm.BoxSizer wxm.VERTICAL
+    @sizer = @create_sizer parent, component
     super parent, component
     @sizer
 
@@ -134,18 +133,20 @@ class Column extends Container
   add: (control) =>
     @sizer\Add control
 
-class Row extends Container
-  do_build: (parent, component) =>
-    @sizer = wxm.BoxSizer wxm.HORIZONTAL
-    super parent, component
-    @sizer
+class Column extends Sizer
+  dir: wxm.VERTICAL
+  create_sizer: (parent, component) =>
+    wxm.BoxSizer @dir
 
-  destroy: =>
-    if @control
-      @control\Clear true
+class Row extends Sizer
+  dir: wxm.HORIZONTAL
+  create_sizer: (parent, component) =>
+    wxm.BoxSizer @dir
 
-  add: (control) =>
-    @sizer\Add control
+class StaticBox extends Sizer
+  create_sizer: (parent, component) =>
+    @dir = if @props.direction == 'vertical' then wxm.VERTICAL else wxm.HORIZONTAL
+    wxm.StaticBoxSizer @dir, parent.window, @props.label
 
 class TextCtrl extends Control
   do_build: (parent, component) =>
@@ -177,6 +178,35 @@ class Button extends Control
     @props = new_props
     false
 
+class CheckList extends Control
+  build: (parent, component) =>
+    @destroy!
+    labels = [item.label for item in *@props.items]
+    @values = [false for item in *@props.items]
+    @control = wxm.CheckListBox parent.window, -1, wxm.DefaultPosition, wxm.DefaultSize, labels
+    @set_values!
+    @control
+
+  set_values: =>
+    for i = 1, #@props.items
+      new_value = @props.items[i].value
+      if new_value != @values[i]
+        @values[i] = new_value
+        @control\Check(i - 1, new_value)
+    nil
+
+  update: (new_props) =>
+    return unless new_props
+    -- TODO handle changed labels
+    @props = new_props
+    @set_values!
+    false
+
+class StandardButtons extends Control
+  do_build: (parent, component) =>
+    wxm.StaticText parent.window, -1, 'standardbuttons'
+  update: => false
+
 class Window
   new: (opts) =>
     @title = opts.title
@@ -204,4 +234,4 @@ class Window
   update: =>
     @contents\update!
 
-{:Label, :Window, :Component, :Column, :TextCtrl, :Button, :Row}
+{:Label, :Window, :Component, :Column, :TextCtrl, :Button, :Row, :CheckList, :StandardButtons, :StaticBox}
