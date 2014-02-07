@@ -25,9 +25,9 @@ class Component
     @state[key] = value
     @dirty = true
 
-  call: (name, value) =>
+  call: (name, ...) =>
     if @props[name]
-      @props[name](@component, value)
+      @props[name](@component, ...)
 
   update: (new_props) =>
     if new_props
@@ -56,6 +56,7 @@ class Control
 
   build: (parent, component) =>
     @destroy!
+    @component = component
     @control = @do_build parent, component
     @control
 
@@ -64,6 +65,10 @@ class Control
 
   update: (new_props) =>
     false
+
+  call: (name, ...) =>
+    if @props[name]
+      @props[name](@component, ...)
 
 class Label extends Control
   do_build: (parent, component) =>
@@ -169,9 +174,8 @@ class TextCtrl extends Control
 class Button extends Control
   do_build: (parent, component) =>
     btn = wxm.Button parent.window, -1, @props.label
-    if @props.on_click
-      btn\Connect wxm.EVT_COMMAND_BUTTON_CLICKED, ->
-        @props.on_click component
+    btn\Connect wxm.EVT_COMMAND_BUTTON_CLICKED, ->
+      @call 'on_click'
     @props.enable = true if @props.enable == nil
     if not @props.enable
       btn\Enable false
@@ -190,10 +194,16 @@ class Button extends Control
 class CheckList extends Control
   build: (parent, component) =>
     @destroy!
+    @component = component
     labels = [item.label for item in *@props.items]
     @values = [false for item in *@props.items]
     @control = wxm.CheckListBox parent.window, -1, wxm.DefaultPosition, wxm.DefaultSize, labels
     @set_values!
+    @control\Connect wxm.EVT_COMMAND_CHECKLISTBOX_TOGGLED, (e) ->
+      idx = e\GetInt()
+      value = @control\IsChecked idx
+      @values[idx + 1] = value
+      @call 'on_checked', @props.items[idx + 1].key, value
     @control
 
   set_values: =>
