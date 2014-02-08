@@ -1,7 +1,4 @@
-package.cpath ..= ';../?.so'
-package.moonpath ..= ';../?.moon'
-
-gui = require 'gui'
+gui = require 'aegisub.gui'
 require 'moon'
 require('fun')()
 
