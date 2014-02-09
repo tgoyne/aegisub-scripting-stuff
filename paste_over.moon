@@ -1,34 +1,37 @@
-gui = require 'aegisub.gui'
+app       = require 'aegisub.app'
+clipboard = require 'aegisub.clipboard'
+gui       = require 'aegisub.gui'
+tr        = require 'aegisub.gettext'
+
 require 'moon'
 require('fun')()
 
 local *
 
-tr = (str) -> str
-
-data =
-  layer: false
-  start_time: true
-  end_time: true
-  style: false
-  actor: false
-  margin_l: false
-  margin_r: false
-  margin_v: false
-  effect: false
-  text: false
+fields = {
+  {label: tr'Layer',           key: 'layer'}
+  {label: tr'Start Time',      key: 'start_time'}
+  {label: tr'End Time',        key: 'end_time'}
+  {label: tr'Style',           key: 'style'}
+  {label: tr'Actor',           key: 'actor'}
+  {label: tr'Margin Left',     key: 'margin_l'}
+  {label: tr'Margin Right',    key: 'margin_r'}
+  {label: tr'Margin Vertical', key: 'margin_v'}
+  {label: tr'Effect',          key: 'effect'}
+  {label: tr'Text',            key: 'text'}
+}
 
 class PasteOverDialog extends gui.Component
   initial_state: =>
-    @props.fields
+    @props.data
 
   select_all: =>
-    for k, _ in pairs @props.fields
-      @set_state k, true
+    for field in *@props.fields
+      @set_state field.key, true
 
   select_none: =>
-    for k, _ in pairs @props.fields
-      @set_state k, false
+    for field in *@props.fields
+      @set_state field.key, false
 
   select_times: =>
     @select_none!
@@ -50,18 +53,7 @@ class PasteOverDialog extends gui.Component
         items: {
           gui.CheckList
             on_checked: @set_state
-            items: {
-              {label: tr'Layer',           key: 'layer',      value: @state.layer}
-              {label: tr'Start Time',      key: 'start_time', value: @state.start_time}
-              {label: tr'End Time',        key: 'end_time',   value: @state.end_time}
-              {label: tr'Style',           key: 'style',      value: @state.style}
-              {label: tr'Actor',           key: 'actor',      value: @state.actor}
-              {label: tr'Margin Left',     key: 'margin_l',   value: @state.margin_l}
-              {label: tr'Margin Right',    key: 'margin_r',   value: @state.margin_r}
-              {label: tr'Margin Vertical', key: 'margin_v',   value: @state.margin_v}
-              {label: tr'Effect',          key: 'effect',     value: @state.effect}
-              {label: tr'Text',            key: 'text',       value: @state.text}
-            }
+            items: [{label: field.label, key: field.key, value: @state[field.key]} for field in *@props.fields]
         }
       gui.Row items: {
         gui.Button
@@ -84,9 +76,19 @@ class PasteOverDialog extends gui.Component
       gui.StandardButtons 'ok', 'cancel', 'help', help_page: 'manual:Paste Over'
     }
 
-window = gui.Window
-  title: 'Select Fields to Paste Over'
-  contents: PasteOverDialog fields: data
+app.register_command
+  name: 'edit/line/paste/over'
+  menu: tr'Paste Lines &Over...'
+  display: tr'Paste Lines Over'
+  help: tr'Paste subtitles over others'
+  validate: (context) -> clipboard.get()\len() > 0
+  call: (context) ->
+    selected = app.options.get 'Tool/Paste Lines Over/Fields'
+    data = {f.key, v for _, f, v in zip(fields, selected)}
 
-window\show!
+    window = gui.Window
+      title: 'Select Fields to Paste Over'
+      contents: PasteOverDialog fields: fields, data: data
+
+    window\show!
 
