@@ -175,7 +175,7 @@ class Button extends Control
   do_build: (parent, component) =>
     btn = wxm.Button parent.window, -1, @props.label
     btn\Connect wxm.EVT_COMMAND_BUTTON_CLICKED, ->
-      @call 'on_click'
+      @call 'on_click', @props.on_click_arg
     @props.enable = true if @props.enable == nil
     if not @props.enable
       btn\Enable false

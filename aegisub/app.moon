@@ -496,6 +496,8 @@ flatten = (obj, prefix) ->
 
 flatten default_options, ''
 
+commands = {}
+
 {
   options:
     get: (k) ->
@@ -505,6 +507,7 @@ flatten default_options, ''
     set: (k, v) ->
       error("Bad option name: #{k}", 2) if options[k] == nil
       options[k] = v
+  commands: commands
   register_command: (command) ->
-    command.call!
+    table.insert commands, command
 }
