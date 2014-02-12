@@ -245,7 +245,6 @@ class Window
     @add @contents\build @, @contents
     frame\SetSizerAndFit @sizer
     frame\Show true
-    wxm.GetApp!\MainLoop!
 
   add: (control) =>
     @sizer\Add control
@@ -253,4 +252,6 @@ class Window
   update: =>
     @contents\update!
 
-{:Label, :Window, :Component, :Column, :TextCtrl, :Button, :Row, :CheckList, :StandardButtons, :StaticBox}
+main_loop = -> wxm.GetApp!\MainLoop!
+
+{:Label, :Window, :Component, :Column, :TextCtrl, :Button, :Row, :CheckList, :StandardButtons, :StaticBox, :main_loop}

@@ -25,3 +25,4 @@ window = gui.Window
   contents: MainFrame commands: app.commands
 
 window\show!
+gui.main_loop!
