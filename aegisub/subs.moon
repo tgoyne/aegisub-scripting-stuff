@@ -3,13 +3,13 @@ util = require 'aegisub.util'
 
 class SubtitlesFileBackingStore
   new: =>
-    @script_info =
+    @info =
       Title: 'Default Aegisub File'
       ScriptType: 'v4.00+'
-      WrapStyle: '0'
+      WrapStyle: 0
       ScaledBorderAndShadow: 'yes'
-      PlayResX: '1280'
-      PlayResY: '720'
+      PlayResX: 1280
+      PlayResY: 720
       'YCbRcMatrix': 'None'
     @styles = {}
     @dialogue = {}
@@ -75,14 +75,13 @@ styles_table = (backing, pending_changes) ->
 
 script_info_table = (backing, pending_changes) ->
   proxy = newproxy true
-  tbl = util.copy backing.script_info
+  tbl = util.copy backing.info
 
   with getmetatable(proxy)
-    .__len = -> #tbl
     .__index = (k) => tbl[k]
     .__newindex = (k, v) =>
       tbl[k] = v
-      table.insert pending_changes, {'script_info', 'set', k, v}
+      table.insert pending_changes, {'info', 'set', k, v}
   proxy
 
 dialogue_table = (backing, pending_changes) ->
@@ -105,7 +104,7 @@ class SubtitlesFile
     @_backing = SubtitlesFileBackingStore()
     @_pending_changes = {}
 
-    @script_info = script_info_table @_backing, @_pending_changes
+    @info = script_info_table @_backing, @_pending_changes
     @styles = styles_table @_backing, @_pending_changes
     @dialogue = dialogue_table @_backing, @_pending_changes
 
@@ -113,7 +112,7 @@ class SubtitlesFile
     file = io.open filename, 'wb'
 
     file\write '[Script Info]\n'
-    for key, value in pairs @script_info
+    for key, value in pairs @info
       file\write string.format '%s: %s\n', key, value
 
     file\write '\n[V4+ Styles]\n'
