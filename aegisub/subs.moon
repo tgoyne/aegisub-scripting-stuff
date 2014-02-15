@@ -144,5 +144,14 @@ class SubtitlesFile
         event.margin[0], event.margin[1], event.margin[2],
         event.effect, event.text
 
-{:SubtitlesFile}
+open = (filename) ->
+  file = io.open filename, 'r'
+  return unless file
+
+  ret = SubtitlesFile!
+  for line in file\lines()
+    descriptor, value = line\match('([^:]+): *(.+)')
+    continue unless descriptor and value
+
+{:SubtitlesFile, :open}
 
