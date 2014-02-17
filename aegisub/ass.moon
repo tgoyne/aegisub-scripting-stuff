@@ -1,6 +1,6 @@
 util = require 'aegisub.util'
 lpeg = require 'lpeg'
-require('fun')()
+require'fun'!
 
 error    = error
 pairs    = pairs
@@ -11,7 +11,7 @@ type     = type
 
 local *
 
-local color_peg, style_peg, time_peg
+local color_peg, style_peg, time_peg, event_peg
 do
   import P, S, R, C, Ct, Cg, Cc, Cf, match from lpeg
 
@@ -55,12 +55,14 @@ do
   StringPeg = Space * C((P(1) - P',')^0) * Space * P','
   BoolPeg   = Space * ((P'-1' * Cc true) + P'0' * Cc false) * Space * P','
   ColorPeg  = Space * color_peg * Space * P','
+  TimePeg   = Space * time_peg * Space * P','
 
   Int    = (name) -> Cg IntPeg, name
   Double = (name) -> Cg DoublePeg, name
   String = (name) -> Cg StringPeg, name
   Bool   = (name) -> Cg BoolPeg, name
   Color  = (name) -> Cg ColorPeg, name
+  Time   = (name) -> Cg TimePeg, name
 
   full_peg  = String'name'
   full_peg *= String'font'
@@ -77,6 +79,17 @@ do
   full_peg *= Int'encoding'
 
   style_peg = (str) -> match Ct(full_peg), str
+
+  -- Dialogue parsing
+  event_peg  = Int'layer'
+  event_peg *= Time'start_time' * Time'end_time'
+  event_peg *= String'style'
+  event_peg *= String'actor'
+  event_peg *= Cg Ct(IntPeg * IntPeg * IntPeg), 'margin'
+  event_peg *= String'effect'
+  event_peg *= Cg P(1)^0, 'text'
+
+  event_peg = Ct event_peg
 
 -- Generates ASS hexadecimal string from R, G, B integer components, in &HBBGGRR& format
 color_str = (c) -> sformat "&H%02X%02X%02X&", c.b or 0, c.g or 0, c.r or 0
@@ -108,5 +121,13 @@ parse_style = (str, skip_trim) ->
     return nil unless descriptor == 'Style' and str
   style_peg str
 
+parse_event = (str, descriptor) ->
+  if not descriptor
+    descriptor, str = str\match('([^:]+): *(.+)')
+    return nil unless (descriptor == 'Dialogue' or descriptor == 'Comment') and str
+  event = lpeg.match event_peg, str
+  event.comment = descriptor == 'Comment' if event
+  event
+
 {:color_str, :alpha_str, :style_color_str, :parse_color, :alpha_from_style,
-  :color_from_style, :parse_time, :time_str, :parse_style}
+  :color_from_style, :parse_time, :time_str, :parse_style, :parse_event}

@@ -100,3 +100,30 @@ describe 'parse_style', ->
     assert.are.equal 7, style.alignment
     assert.are.same {10, 20, 30}, style.margin
     assert.are.equal 1, style.encoding
+
+describe 'parse_event', ->
+  it 'should return a correct dialogue table with given a valid string', ->
+    event = ass.parse_event 'Dialogue: 2,0:00:00.00,0:00:05.00,Default,actor,5,10,15,effect,hello, world'
+    assert.is.not.nil event
+    assert.is.false event.comment
+    assert.is.equal 2, event.layer
+    assert.is.equal 0, event.start_time
+    assert.is.equal 5000, event.end_time
+    assert.is.equal 'Default', event.style
+    assert.is.equal 'actor', event.actor
+    assert.is.same {5, 10, 15}, event.margin
+    assert.is.equal 'effect', event.effect
+    assert.is.equal 'hello, world', event.text
+
+  it 'should handle commented lines', ->
+    event = ass.parse_event 'Comment: 2,0:00:00.00,0:00:05.00,Default,actor,5,10,15,effect,hello, world'
+    assert.is.not.nil event
+    assert.is.true event.comment
+    assert.is.equal 2, event.layer
+    assert.is.equal 0, event.start_time
+    assert.is.equal 5000, event.end_time
+    assert.is.equal 'Default', event.style
+    assert.is.equal 'actor', event.actor
+    assert.is.same {5, 10, 15}, event.margin
+    assert.is.equal 'effect', event.effect
+    assert.is.equal 'hello, world', event.text
