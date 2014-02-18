@@ -40,3 +40,11 @@ describe 'SubtitlesFile', ->
         file.styles[1].font_size = 20
         assert.is.equal 20, file.styles[1].font_size
 
+describe 'open', ->
+  it 'should be able to open a simple test file', ->
+    file = subs.open 'aegisub/tests/files/test.ass'
+    assert.is.not.nil file
+    assert.is.equal 1, #file.styles
+    assert.is.equal 1, #file.events
+    assert.is.equal 'File Title', file.info.Title
+

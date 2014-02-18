@@ -12,7 +12,7 @@ class SubtitlesFileBackingStore
       PlayResY: 720
       'YCbRcMatrix': 'None'
     @styles = {}
-    @dialogue = {}
+    @events = {}
 
   apply_changes: (changes) =>
     for change in *changes
@@ -86,7 +86,7 @@ script_info_table = (backing, pending_changes) ->
 
 dialogue_table = (backing, pending_changes) ->
   proxy = newproxy true
-  tbl = util.copy backing.dialogue
+  tbl = util.copy backing.events
   dialogue_proxies = ProxyTable()
 
   with getmetatable(proxy)
@@ -96,7 +96,7 @@ dialogue_table = (backing, pending_changes) ->
 
     .__newindex = (k, v) =>
       tbl[k] = v
-      table.insert pending_changes, {'dialogue', 'set', k, v}
+      table.insert pending_changes, {'events', 'set', k, v}
   proxy
 
 class SubtitlesFile
@@ -106,7 +106,7 @@ class SubtitlesFile
 
     @info = script_info_table @_backing, @_pending_changes
     @styles = styles_table @_backing, @_pending_changes
-    @dialogue = dialogue_table @_backing, @_pending_changes
+    @events = dialogue_table @_backing, @_pending_changes
 
   save: (filename) =>
     file = io.open filename, 'wb'
@@ -152,6 +152,20 @@ open = (filename) ->
   for line in file\lines()
     descriptor, value = line\match('([^:]+): *(.+)')
     continue unless descriptor and value
+    continue if descriptor[1] == ';'
+
+    switch descriptor
+      when 'Style'
+        ret.styles[#ret.styles + 1] = ass.parse_style value, descriptor
+      when 'Dialogue', 'Comment'
+        ret.events[#ret.events + 1] = ass.parse_event value, descriptor
+      when 'Format'
+        ret -- Format lines not supported
+      when 'fontname', 'filename'
+        ret -- Attachments not yet implemented
+      else
+        ret.info[descriptor] = value
+  ret
 
 {:SubtitlesFile, :open}
 
