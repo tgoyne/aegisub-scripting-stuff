@@ -57,8 +57,9 @@ styles_table = (backing, pending_changes) ->
       style_proxies\get if type(k) == 'number'
         tbl[k]
       else
+        lower = k\lower()
         for style in *tbl
-          return style if style.name == k
+          return style if style.name == k or style.name\lower() == lower
 
     .__newindex = (k, v) =>
       if type(k) == 'string'
