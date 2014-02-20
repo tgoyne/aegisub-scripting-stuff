@@ -1,5 +1,10 @@
 subs = require 'aegisub.subs'
 
+_p = pairs
+_ip = ipairs
+pairs = (t, ...) -> (getmetatable(t).__pairs or _p) t, ...
+ipairs = (t, ...) -> (getmetatable(t).__ipairs or _ip) t, ...
+
 describe 'SubtitlesFile', ->
   local file
   before_each -> file = subs.SubtitlesFile!
@@ -39,6 +44,10 @@ describe 'SubtitlesFile', ->
         file.styles[1] = {name: 'Default'}
         file.styles[1].font_size = 20
         assert.is.equal 20, file.styles[1].font_size
+    it 'should support looping over the fields with `ipairs`', ->
+      assert.has_no.errors ->
+        for i, style in ipairs file.styles
+          key = value
 
 describe 'open', ->
   it 'should be able to open a simple test file', ->

@@ -53,6 +53,8 @@ styles_table = (backing, pending_changes) ->
 
   with getmetatable(proxy)
     .__len = => #tbl
+    .__pairs = -> pairs tbl
+    .__ipairs = -> ipairs tbl
     .__index = (k) =>
       style_proxies\get if type(k) == 'number'
         tbl[k]
@@ -83,6 +85,7 @@ script_info_table = (backing, pending_changes) ->
     .__newindex = (k, v) =>
       tbl[k] = v
       table.insert pending_changes, {'info', 'set', k, v}
+    .__pairs = -> pairs tbl
   proxy
 
 dialogue_table = (backing, pending_changes) ->
@@ -92,6 +95,7 @@ dialogue_table = (backing, pending_changes) ->
 
   with getmetatable(proxy)
     .__len = -> #tbl
+    .__ipairs = -> ipairs tbl
     .__index = (k) =>
       dialogue_proxies\get tbl[k]
 
