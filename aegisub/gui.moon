@@ -222,6 +222,40 @@ class CheckList extends Control
     @set_values!
     false
 
+class ComboBox extends Control
+  do_build: (parent, component) =>
+    flags = if @props.readonly then wxm.CB_READONLY else 0
+    @value = @props.value
+    @items = @props.items
+    cmb = wxm.ComboBox parent.window, -1, @value or '', wxm.DefaultPosition, wxm.DefaultSize, @items, flags
+    cmb\Connect wxm.EVT_COMMAND_COMBOBOX_SELECTED, ->
+      @call 'on_change', cb\GetSelection(), cb\GetValue(), @props.on_change_arg
+    @do_update cmb
+    cmb
+
+  table_cmp: (a, b) =>
+    return false if #a != #b
+    for _, v1, v2 in zip a, b
+      return false if v1 != v2
+    true
+
+  do_update: (ctrl) =>
+    if not @table_cmp @props.items, @items
+      @items = @props.items
+      ctrl\Set @items
+    if @props.value and @props.value != @value
+      @value = @props.value
+      ctrl\SetStringSelection @value
+    if @props.index and @props.index != @index
+      @index = @props.index
+      ctrl\SetSelection @index
+
+  update: (new_props) =>
+    if new_props
+      @props = new_props
+      @do_update @control
+    false
+
 class StandardButtons extends Control
   do_build: (parent, component) =>
     wxm.StaticText parent.window, -1, 'standardbuttons'
@@ -275,4 +309,4 @@ save_dialog = (message, dir, file, wildcard, force_overwrite) ->
 main_loop = -> wxm.GetApp!\MainLoop!
 
 {:Label, :Window, :Component, :Column, :TextCtrl, :Button, :Row, :CheckList,
-  :StandardButtons, :StaticBox, :main_loop, :open_dialog, :save_dialog}
+  :StandardButtons, :StaticBox, :main_loop, :open_dialog, :save_dialog, :ComboBox}
