@@ -256,6 +256,24 @@ class ComboBox extends Control
       @do_update @control
     false
 
+class CheckBox extends Control
+  do_build: (parent, component) =>
+    cb = wxm.CheckBox parent.window, -1, @props.label
+    if @props.value
+      cb\SetValue true
+    cb\Connect wxm.EVT_COMMAND_CHECKBOX_CLICKED, (e) ->
+      @call 'on_change', e\IsChecked(), @props.on_change_arg
+    cb
+
+  update: (new_props) =>
+    return unless new_props
+    if new_props.value != @props.value
+      cb\SetValue new_props.value
+    if new_props.label != @props.label
+      cb\SetLabel new_props.label
+    @props = new_props
+    false
+
 class StandardButtons extends Control
   do_build: (parent, component) =>
     wxm.StaticText parent.window, -1, 'standardbuttons'
@@ -309,4 +327,4 @@ save_dialog = (message, dir, file, wildcard, force_overwrite) ->
 main_loop = -> wxm.GetApp!\MainLoop!
 
 {:Label, :Window, :Component, :Column, :TextCtrl, :Button, :Row, :CheckList,
-  :StandardButtons, :StaticBox, :main_loop, :open_dialog, :save_dialog, :ComboBox}
+  :StandardButtons, :StaticBox, :main_loop, :open_dialog, :save_dialog, :ComboBox, :CheckBox}
