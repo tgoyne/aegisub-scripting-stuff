@@ -305,21 +305,21 @@ class Window
   update: =>
     @contents\update!
 
-open_dialog = (message, dir, file, wildcard, multiple, must_exist=true) ->
+open_dialog = (opts) ->
   flags = wxm.FD_OPEN
-  flags = bit.band flags, wxm.FD_MULTIPLE if multiple
-  flags = bit.band flags, wxm.FD_FILE_MUST_EXIST if must_exist
+  flags = bit.band flags, wxm.FD_MULTIPLE if opts.multiple
+  flags = bit.band flags, wxm.FD_FILE_MUST_EXIST if opts.must_exist != false -- nil is true
 
-  dialog = wxm.FileDialog wx.NULL, message, dir, file, wildcard, flags
+  dialog = wxm.FileDialog wx.NULL, opts.message or '', opts.dir, opts.file, opts.wildcard or '*.*', flags
   if dialog\ShowModal! == wxm.ID_CANCEL
     return nil
-  if multiple then dialog\GetPaths() else dialog\GetPath()
+  if opts.multiple then dialog\GetPaths() else dialog\GetPath()
 
-save_dialog = (message, dir, file, wildcard, force_overwrite) ->
+save_dialog = (opts) ->
   flags = wxm.FD_SAVE
-  flags = bit.band flags, wxm.FD_OVERWRITE_PROMPT unless force_overwrite
+  flags = bit.band flags, wxm.FD_OVERWRITE_PROMPT unless opts.force_overwrite
 
-  dialog = wxm.FileDialog wx.NULL, message, dir, file, wildcard, flags
+  dialog = wxm.FileDialog wx.NULL, opts.message or '', opts.dir, opts.file, opts.wildcard or '*.*', flags
   if dialog\ShowModal! == wxm.ID_CANCEL
     return nil
   dialog\GetPath()
