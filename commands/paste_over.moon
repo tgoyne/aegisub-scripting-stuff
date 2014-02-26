@@ -73,7 +73,7 @@ class PasteOverDialog extends gui.Component
           on_click: @select_text
           enable: any ((k, v) -> not v == (k == 'text')), @state
       }
-      gui.StandardButtons 'ok', 'cancel', 'help', help_page: 'manual:Paste Over'
+      gui.StandardButtons buttons: 'ok', 'cancel', 'help', help_page: 'manual:Paste Over'
     }
 
 app.register_command
