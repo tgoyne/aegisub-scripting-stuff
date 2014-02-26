@@ -187,9 +187,8 @@ class TextCtrl extends Control
 
   do_build: (parent, component) =>
     ctrl = wxm.TextCtrl parent.window, -1, @props.value
-    if @props.on_change
-      ctrl\Connect wxm.EVT_COMMAND_TEXT_UPDATED, ->
-        @props.on_change component, new_value: ctrl\GetValue()
+    ctrl\Connect wxm.EVT_COMMAND_TEXT_UPDATED, ->
+      @call 'on_change', ctrl\GetValue()
     ctrl
 
   update: (new_props) =>
