@@ -4,6 +4,11 @@ require 'moon'
 
 wxm = {k\sub(3), v for k, v in pairs wx}
 
+property_types:
+  label: 'string'
+  on_change: 'function'
+  items: 'table'
+
 class Component
   new: (props) =>
     @props = props
@@ -53,9 +58,10 @@ class Control
     for k in *@required_props
       if not props[k]
         error "Property '#{k}' is required for #{@@__name}", 3
-    for k, v in pairs @prop_types
-      if props[k] and type(props[k]) != v
-        error "Property '#{k}' is of type #{type(props[k])}, but should be of type #{v}", 3
+    for k, v in pairs props
+      expected = @@prop_types[k] or property_types[k]
+      if expected and type(v) != expected
+        error "Property '#{k}' is of type #{type(v)}, but should be of type #{expected}", 3
 
     @props = props
     @state = {}
@@ -97,7 +103,6 @@ class Label extends Control
 
 class Container extends Control
   required_props: {'items'}
-  prop_types: items: 'table'
 
   do_build: (parent, component) =>
     @window = parent.window
@@ -170,10 +175,7 @@ class Row extends Sizer
 
 class StaticBox extends Sizer
   required_props: {'items', 'direction', 'label'}
-  prop_types:
-    items: 'table'
-    direction: 'string'
-    label: 'string'
+  prop_types: direction: 'string'
 
   create_sizer: (parent, component) =>
     @dir = if @props.direction == 'vertical' then wxm.VERTICAL else wxm.HORIZONTAL
@@ -181,9 +183,7 @@ class StaticBox extends Sizer
 
 class TextCtrl extends Control
   required_props: {'value'}
-  prop_types:
-    value: 'string'
-    on_change: 'function'
+  prop_types: value: 'string'
 
   do_build: (parent, component) =>
     ctrl = wxm.TextCtrl parent.window, -1, @props.value
@@ -200,9 +200,7 @@ class TextCtrl extends Control
 
 class Button extends Control
   required_props: {'label'}
-  prop_types:
-    label: 'string'
-    on_click: 'function'
+  prop_types: on_click: 'function'
 
   do_build: (parent, component) =>
     btn = wxm.Button parent.window, -1, @props.label
@@ -256,10 +254,8 @@ class CheckList extends Control
 class ComboBox extends Control
   required_props: {'items'}
   prop_types:
-    items: 'table'
     value: 'string'
     index: 'number'
-    on_change: 'function'
 
   do_build: (parent, component) =>
     flags = if @props.readonly then wxm.CB_READONLY else 0
@@ -296,9 +292,6 @@ class ComboBox extends Control
 
 class CheckBox extends Control
   required_props: {'label'}
-  prop_types:
-    label: 'string'
-    on_change: 'function'
 
   do_build: (parent, component) =>
     cb = wxm.CheckBox parent.window, -1, @props.label
