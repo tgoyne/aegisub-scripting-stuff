@@ -19,12 +19,16 @@ shallow_table_eq = (a, b) ->
 
 class Component
   new: (props) =>
+    if not props or type(props) != 'table'
+      error 'Contructing a compontent requires a properties table', 3
+
     @props = props
     @state = {}
     if @initial_state
       @state = @initial_state!
 
   build: (parent, component) =>
+    assert parent and component and type(component) == 'table'
     @parent = parent
     @component = component
     @destroy!
@@ -36,6 +40,7 @@ class Component
       @child\destroy!
 
   set_state: (key, value) =>
+    assert key
     @state[key] = value
     @dirty = true
 
@@ -49,6 +54,7 @@ class Component
     if @dirty or new_props
       @dirty = false
       new_child = @render!
+      assert new_child
       if new_child.__class == @child.__class
         @child\update new_child.props
       else
@@ -63,6 +69,9 @@ class Component
 
 class Control
   new: (props) =>
+    if not props or type(props) != 'table'
+      error 'Contructing a compontent requires a properties table', 3
+
     for k in *@required_props
       if not props[k]
         error "Property '#{k}' is required for #{@@__name}", 3
@@ -77,6 +86,8 @@ class Control
       @state = @initial_state!
 
   build: (parent, component) =>
+    assert parent and component and type(component) == 'table'
+
     @destroy!
     @component = component
     @built_props = @props
@@ -94,6 +105,7 @@ class Control
     false
 
   apply_diff: (old_props, new_props) =>
+    assert old_props and type(old_props) == 'table', 'old_props is nil'
     return unless new_props
 
     for k, v in pairs @@updaters
@@ -185,6 +197,7 @@ class Sizer extends Container
       @control\Clear true
 
   add: (control) =>
+    assert control, 'Control is nil'
     flags = wxm.SizerFlags()
     flags = flags\Expand()
     flags = flags\Border()
