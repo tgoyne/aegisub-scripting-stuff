@@ -6,10 +6,10 @@ class SubtitlesFileBackingStore
     @info =
       Title: 'Default Aegisub File'
       ScriptType: 'v4.00+'
-      WrapStyle: 0
+      WrapStyle: '0'
       ScaledBorderAndShadow: 'yes'
-      PlayResX: 1280
-      PlayResY: 720
+      PlayResX: '1280'
+      PlayResY: '720'
       'YCbRcMatrix': 'None'
     @styles = {}
     @events = {}

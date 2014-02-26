@@ -11,7 +11,7 @@ describe 'SubtitlesFile', ->
 
   describe 'Script Info', ->
     it 'should set fields by default', ->
-      assert.are.equal 0, file.info.WrapStyle
+      assert.are.equal '0', file.info.WrapStyle
       assert.are.equal 'v4.00+', file.info.ScriptType
 
     it 'should support modifying fields', ->
