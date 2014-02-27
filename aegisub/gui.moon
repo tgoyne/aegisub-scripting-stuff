@@ -69,6 +69,10 @@ class Component
       false
 
 class Control
+  required_props: {}
+  prop_types: {}
+  updaters: {}
+
   new: (props) =>
     if not props or type(props) != 'table'
       error 'Contructing a compontent requires a properties table', 3
@@ -122,24 +126,104 @@ class Control
       elseif old != new
         v(@, new)
 
-  updaters: {}
-
   call: (name, ...) =>
     if @props[name]
       @props[name](@component, ...)
 
-  required_props: {}
-  prop_types: {}
 
 class Label extends Control
   required_props: {'text'}
   prop_types: text: 'string'
+  updaters: text: (new_value) => @control\SetLabel new_value
+  do_build: (parent, component) => wxm.StaticText parent.window, -1, @props.text
+
+class TextCtrl extends Control
+  required_props: {'value'}
+  prop_types: value: 'string'
+  updaters: value: (new_value) => @control\ChangeValue new_props.value
 
   do_build: (parent, component) =>
-    wxm.StaticText parent.window, -1, @props.text
+    with wxm.TextCtrl parent.window, -1, @props.value
+      \Connect wxm.EVT_COMMAND_TEXT_UPDATED, ->
+        @call 'on_change', ctrl\GetValue()
+
+class Button extends Control
+  required_props: {'label'}
+  prop_types: on_click: 'function'
+  updaters:
+    label: (new_value) => @control\SetLabel new_value
+    enable: (new_value) => @control\Enable new_value
+
+  do_build: (parent, component) =>
+    @built_props = label: @props.label
+    with wxm.Button parent.window, -1, @props.label
+      \Connect wxm.EVT_COMMAND_BUTTON_CLICKED, ->
+        @call 'on_click', @props.on_click_arg
+
+  update: (new_props) =>
+    if new_props and new_props.enable == nil
+      new_props.enable = true
+    super new_props
+
+class CheckList extends Control
+  do_build: (parent, component) =>
+    @built_properties = {}
+    @labels = [item.label for item in *@props.items]
+    @values = [false for item in *@props.items]
+    with wxm.CheckListBox parent.window, -1, wxm.DefaultPosition, wxm.DefaultSize, @labels
+      \Connect wxm.EVT_COMMAND_CHECKLISTBOX_TOGGLED, (e) ->
+        idx = e\GetInt()
+        value = @control\IsChecked idx
+        if value != @values[idx + 1]
+          @values[idx + 1] = value
+          @call 'on_checked', @props.items[idx + 1].key, value
 
   updaters:
-    text: (new_value) => @control\SetLabel new_value
+    items: (new_items) =>
+      labels = [item.label for item in *new_items]
+      if not shallow_table_eq @labels, labels
+        @control\Set labels
+        @labels = labels
+
+      values = [item.value for item in *new_items]
+      for i = 1, #values
+        if values[i] != @values[i]
+          @control\Check i - 1, values[i]
+      @values = values
+
+class ComboBox extends Control
+  required_props: {'items'}
+  prop_types:
+    value: 'string'
+    index: 'number'
+  updaters:
+    items: (new_value) => @control\Set new_value
+    value: (new_value) => if new_value then @control\SetStringSelection new_value
+    index: (new_value) => if new_value then @control\SetSelection new_value
+
+  do_build: (parent, component) =>
+    built_props = readonly: @props.readonly, value: @props.value, items: @props.items
+    flags = if @props.readonly then wxm.CB_READONLY else 0
+    with wxm.ComboBox parent.window, -1, @props.value or '', wxm.DefaultPosition, wxm.DefaultSize, @props.items, flags
+      \Connect wxm.EVT_COMMAND_COMBOBOX_SELECTED, ->
+        @call 'on_change', cb\GetSelection(), cb\GetValue(), @props.on_change_arg
+
+class CheckBox extends Control
+  required_props: {'label'}
+  updaters:
+    value: (new_value) => @control\SetValue new_value
+    label: (new_value) => @control\SetLabel new_value
+
+  do_build: (parent, component) =>
+    @built_props = label: @props.label
+    with wxm.CheckBox parent.window, -1, @props.label
+      \Connect wxm.EVT_COMMAND_CHECKBOX_CLICKED, (e) ->
+        @call 'on_change', e\IsChecked(), @props.on_change_arg
+
+class StandardButtons extends Control
+  do_build: (parent, component) =>
+    wxm.StaticText parent.window, -1, 'standardbuttons'
+  update: => false
 
 class Container extends Control
   required_props: {'items'}
@@ -211,104 +295,6 @@ class StaticBox extends Sizer
   create_sizer: (parent, component) =>
     @dir = if @props.direction == 'vertical' then wxm.VERTICAL else wxm.HORIZONTAL
     wxm.StaticBoxSizer @dir, parent.window, @props.label
-
-class TextCtrl extends Control
-  required_props: {'value'}
-  prop_types: value: 'string'
-
-  do_build: (parent, component) =>
-    ctrl = wxm.TextCtrl parent.window, -1, @props.value
-    ctrl\Connect wxm.EVT_COMMAND_TEXT_UPDATED, ->
-      @call 'on_change', ctrl\GetValue()
-    ctrl
-
-  updaters:
-    value: (new_value) => @control\ChangeValue new_props.value
-
-class Button extends Control
-  required_props: {'label'}
-  prop_types: on_click: 'function'
-
-  do_build: (parent, component) =>
-    @built_props = label: @props.label
-    btn = wxm.Button parent.window, -1, @props.label
-    btn\Connect wxm.EVT_COMMAND_BUTTON_CLICKED, ->
-      @call 'on_click', @props.on_click_arg
-    btn
-
-  update: (new_props) =>
-    if new_props and new_props.enable == nil
-      new_props.enable = true
-    super new_props
-
-  updaters:
-    label: (new_value) => @control\SetLabel new_value
-    enable: (new_value) => @control\Enable new_value
-
-class CheckList extends Control
-  do_build: (parent, component) =>
-    @built_properties = {}
-    @labels = [item.label for item in *@props.items]
-    @values = [false for item in *@props.items]
-    ctrl = wxm.CheckListBox parent.window, -1, wxm.DefaultPosition, wxm.DefaultSize, @labels
-    ctrl\Connect wxm.EVT_COMMAND_CHECKLISTBOX_TOGGLED, (e) ->
-      idx = e\GetInt()
-      value = @control\IsChecked idx
-      if value != @values[idx + 1]
-        @values[idx + 1] = value
-        @call 'on_checked', @props.items[idx + 1].key, value
-    ctrl
-
-  updaters:
-    items: (new_items) =>
-      labels = [item.label for item in *new_items]
-      if not shallow_table_eq @labels, labels
-        @control\Set labels
-        @labels = labels
-
-      values = [item.value for item in *new_items]
-      for i = 1, #values
-        if values[i] != @values[i]
-          @control\Check i - 1, values[i]
-      @values = values
-
-class ComboBox extends Control
-  required_props: {'items'}
-  prop_types:
-    value: 'string'
-    index: 'number'
-
-  do_build: (parent, component) =>
-    built_props = readonly: @props.readonly, value: @props.value, items: @props.items
-    flags = if @props.readonly then wxm.CB_READONLY else 0
-    cmb = wxm.ComboBox parent.window, -1, @props.value or '', wxm.DefaultPosition, wxm.DefaultSize, @props.items, flags
-    cmb\Connect wxm.EVT_COMMAND_COMBOBOX_SELECTED, ->
-      @call 'on_change', cb\GetSelection(), cb\GetValue(), @props.on_change_arg
-    cmb
-
-  updaters:
-    items: (new_value) => @control\Set new_value
-    value: (new_value) => if new_value then @control\SetStringSelection new_value
-    index: (new_value) => if new_value then @control\SetSelection new_value
-
-class CheckBox extends Control
-  required_props: {'label'}
-
-  do_build: (parent, component) =>
-    @built_props = label: @props.label
-    cb = wxm.CheckBox parent.window, -1, @props.label
-    cb\Connect wxm.EVT_COMMAND_CHECKBOX_CLICKED, (e) ->
-      @call 'on_change', e\IsChecked(), @props.on_change_arg
-    cb
-
-  updaters:
-    value: (new_value) => @control\SetValue new_value
-    label: (new_value) => @control\SetLabel new_value
-
-class StandardButtons extends Control
-  do_build: (parent, component) =>
-    wxm.StaticText parent.window, -1, 'standardbuttons'
-  update: => false
 
 class Window
   new: (opts) =>
