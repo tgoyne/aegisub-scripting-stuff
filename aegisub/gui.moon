@@ -257,7 +257,7 @@ class Container extends Control
       if old
         old\destroy!
       if new
-        @add new\build @, @component
+        @insert i, new\build @, @component
 
     any
 
@@ -273,10 +273,11 @@ class Sizer extends Container
 
   add: (control) =>
     assert control, 'Control is nil'
-    flags = wxm.SizerFlags()
-    flags = flags\Expand()
-    flags = flags\Border()
-    @sizer\Add control, flags
+    @sizer\Add control, wxm.SizerFlags()\Expand()\Border()
+
+  insert: (pos, control) =>
+    assert control, 'Control is nil'
+    @sizer\Insert pos - 1, control, wxm.SizerFlags()\Expand()\Border()
 
 class Column extends Sizer
   dir: wxm.VERTICAL
