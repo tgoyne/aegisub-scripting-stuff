@@ -140,7 +140,7 @@ class Label extends Control
 class TextCtrl extends Control
   required_props: {'value'}
   prop_types: value: 'string'
-  updaters: value: (new_value) => @control\ChangeValue new_props.value
+  updaters: value: (new_value) => @control\ChangeValue new_value
 
   do_build: (parent, component) =>
     with wxm.TextCtrl parent.window, -1, @props.value
