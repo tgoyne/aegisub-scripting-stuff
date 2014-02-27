@@ -1,5 +1,6 @@
 bit = require 'bit'
 moon = require 'moon'
+util = require 'aegisub.util'
 require'fun'!
 require 'strict'
 require 'wx'
@@ -147,42 +148,32 @@ class Container extends Control
     @window = parent.window
     for child in *@props.items
       @add child\build @, component
-    nil
 
   update: (new_props) =>
     if not new_props
-      any = false
-      for child in *@props.items
-        did_update = child\update!
-        any or= did_update
-      return any
+      did_update = [child\update! for child in *@props.items]
+      return any ((x) -> x), did_update
 
     new_items = new_props.items
     old_items = @props.items
 
-    count = if #new_items > #old_items then #new_items else #old_items
-
     any = false
-    for i = 1, count
+    for i = 1, util.max #new_items, #old_items
       new = new_items[i]
       old = old_items[i]
-      if new and not old
-        @add new\build @, @component
-        any = true
-        table.insert(old_items, new)
-      else if old and not new
+
+      if old and new and old.__class == new.__class
+        did_update = old\update new.props
+        any or= did_update
+        continue
+
+      any = true
+      old_items[i] = new
+
+      if old
         old\destroy!
-        any = true
-        table.remove(old_items, i)
-      else
-        if old.__class == new.__class
-          did_update = old\update new.props
-          any or= did_update
-        else
-          old\destroy!
-          @add new\build @, @component
-          any = true
-          old_items[i] = new
+      if new
+        @add new\build @, @component
 
     any
 
