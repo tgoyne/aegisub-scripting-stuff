@@ -51,7 +51,7 @@ describe 'SubtitlesFile', ->
 
 describe 'open', ->
   it 'should be able to open a simple test file', ->
-    file = subs.open 'aegisub/tests/files/test.ass'
+    file = subs.open 'spec/files/test.ass'
     assert.is.not.nil file
     assert.is.equal 1, #file.styles
     assert.is.equal 1, #file.events
