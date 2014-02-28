@@ -120,6 +120,8 @@ class Sizer extends Container
     assert control, 'Control is nil'
     @sizer\Insert pos - 1, control, wxm.SizerFlags()\Expand()\Border()
 
+  remove: -> -- Do nothing since destroyed the control removes it
+
 class Column extends Sizer
   dir: wxm.VERTICAL
   create_sizer: (parent, component) =>

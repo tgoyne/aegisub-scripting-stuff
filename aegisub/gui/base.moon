@@ -15,13 +15,13 @@ shallow_table_eq = (a, b) ->
 
 class Component
   new: (props) =>
+    if not @render
+      error 'Components must have a render method', 3
     if not props or type(props) != 'table'
       error 'Contructing a compontent requires a properties table', 3
 
     @props = props
-    @state = {}
-    if @initial_state
-      @state = @initial_state!
+    @state = if @initial_state then @initial_state! else {}
 
   build: (parent, component) =>
     assert parent and component and type(component) == 'table'
@@ -155,6 +155,7 @@ class Container extends Control
       old_items[i] = new
 
       if old
+        @remove i
         old\destroy!
       if new
         @insert i, new\build @, @component
