@@ -120,7 +120,23 @@ class Sizer extends Container
     assert control, 'Control is nil'
     @sizer\Insert pos - 1, control, wxm.SizerFlags()\Expand()\Border()
 
-  remove: -> -- Do nothing since destroyed the control removes it
+  truncate: (final_count) =>
+    for i = @sizer\GetChildren()\GetCount(), final_count + 1, -1
+      window = @sizer\GetItem(i - 1)\GetWindow()
+      if window
+        window\Destroy!
+      else
+        @sizer\Detach i - 1
+
+  move_item: (src, dst) =>
+    assert src > dst
+    assert src <= @sizer\GetChildren()\GetCount()
+    sizer_item = @sizer\GetItem src - 1
+    child = sizer_item\GetSizer() or sizer_item\GetWindow()
+    assert child
+
+    @sizer\Detach src - 1
+    @sizer\Insert dst - 1, child
 
 class Column extends Sizer
   dir: wxm.VERTICAL

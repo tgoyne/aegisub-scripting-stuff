@@ -138,28 +138,68 @@ class Container extends Control
       did_update = [child\update! for child in *@props.items]
       return any ((x) -> x), did_update
 
-    new_items = new_props.items
-    old_items = @props.items
+    keyed = {}
+    unkeyed = {}
+    for i, item in ipairs @props.items
+      if item.props.key
+        keyed[item.props.key] = i
+      else
+        table.insert unkeyed, i
 
-    any = false
-    for i = 1, util.max #new_items, #old_items
-      new = new_items[i]
-      old = old_items[i]
+    positions = {}
+    existing_item_for = (item) ->
+      key = item.props.key
+      if key
+        idx = keyed[key]
+        return @props.items[idx], idx
 
-      if old and new and old.__class == new.__class
-        did_update = old\update new.props
-        any or= did_update
-        continue
+      cls = item.__class
+      position = positions[cls] or 1
+      for i = position, #unkeyed
+        if @props.items[unkeyed[i]].__class == cls
+          positions[cls] = i + 1
+          idx = unkeyed[i]
+          return @props.items[idx], idx
 
-      any = true
-      old_items[i] = new
+      positions[cls] = #unkeyed + 1
+      return nil
 
-      if old
-        @remove i
-        old\destroy!
-      if new
-        @insert i, new\build @, @component
+    new_items = {}
+    needs_layout = false
+    new_contents = {}
 
-    any
+    for new_idx, new_item in ipairs new_props.items
+      old_item, old_idx = existing_item_for new_item
+      if old_item
+        table.insert new_items, old_item
+        table.insert new_contents, old_idx
+        child_needs_layout = old_item\update new_item.props
+        needs_layout or= child_needs_layout
+      else
+        table.insert new_items, new_item
+        table.insert new_contents, new_item\build @, @component
+        needs_layout = true
+
+    -- This is O(n^2) for reversing a list. Might be worth caring about.
+    incr = 0
+    for i, control in ipairs new_contents
+      if type(control) == 'number'
+        control += incr
+        continue if i == control
+
+        assert control > i
+        @move_item control, i
+
+        for j = i + 1, #new_contents
+          v = new_contents[j]
+          if type(v) == 'number' and v >= i and v < control
+            new_contents[j] += 1
+      else
+        incr += 1
+        @insert i, control
+
+    @truncate #new_contents
+    @props.items = new_items
+    needs_layout
 
 util.exportable {:Component, :Control, :Container, :shallow_table_eq}
