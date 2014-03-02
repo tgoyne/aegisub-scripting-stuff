@@ -8,28 +8,35 @@ require 'wx'
 
 wxm = {k\sub(3), v for k, v in pairs wx}
 
-class Label extends Control
-  required_props: {'text'}
-  prop_types: text: 'string'
-  updaters: text: (new_value) => @control\SetLabel new_value
-  do_build: (parent, component) => wxm.StaticText parent.window, -1, @props.text
+class GuiControl extends Control
+  updaters:
+    label: (value) => @control\SetLabel value
+    enabled: (value) => @control\Enable if value == nil then true else value
+    hidden: (value) => @control\Show not value
 
-class TextCtrl extends Control
+add_updaters = (tbl) ->
+  for k, v in pairs GuiControl.updaters
+    if tbl[k] == nil
+      tbl[k] = v
+  tbl
+
+class Label extends GuiControl
+  required_props: {'label'}
+  do_build: (parent, component) => wxm.StaticText parent.window, -1, @props.label
+
+class TextCtrl extends GuiControl
   required_props: {'value'}
   prop_types: value: 'string'
-  updaters: value: (new_value) => @control\ChangeValue new_value
+  updaters: add_updaters value: (new_value) => @control\ChangeValue new_value
 
   do_build: (parent, component) =>
     with wxm.TextCtrl parent.window, -1, @props.value
       \Connect wxm.EVT_COMMAND_TEXT_UPDATED, ->
         @call 'on_change', ctrl\GetValue()
 
-class Button extends Control
+class Button extends GuiControl
   required_props: {'label'}
   prop_types: on_click: 'function'
-  updaters:
-    label: (new_value) => @control\SetLabel new_value
-    enable: (new_value) => @control\Enable new_value
 
   do_build: (parent, component) =>
     @built_props = label: @props.label
@@ -37,12 +44,7 @@ class Button extends Control
       \Connect wxm.EVT_COMMAND_BUTTON_CLICKED, ->
         @call 'on_click', @props.on_click_arg
 
-  update: (new_props) =>
-    if new_props and new_props.enable == nil
-      new_props.enable = true
-    super new_props
-
-class CheckList extends Control
+class CheckList extends GuiControl
   do_build: (parent, component) =>
     @built_properties = {}
     @labels = [item.label for item in *@props.items]
@@ -55,7 +57,7 @@ class CheckList extends Control
           @values[idx + 1] = value
           @call 'on_checked', @props.items[idx + 1].key, value
 
-  updaters:
+  updaters: add_updaters
     items: (new_items) =>
       labels = [item.label for item in *new_items]
       if not shallow_table_eq @labels, labels
@@ -68,12 +70,12 @@ class CheckList extends Control
           @control\Check i - 1, values[i]
       @values = values
 
-class ComboBox extends Control
+class ComboBox extends GuiControl
   required_props: {'items'}
   prop_types:
     value: 'string'
     index: 'number'
-  updaters:
+  updaters: add_updaters
     items: (new_value) => @control\Set new_value
     value: (new_value) => if new_value then @control\SetStringSelection new_value
     index: (new_value) => if new_value then @control\SetSelection new_value
@@ -85,11 +87,9 @@ class ComboBox extends Control
       \Connect wxm.EVT_COMMAND_COMBOBOX_SELECTED, ->
         @call 'on_change', cb\GetSelection(), cb\GetValue(), @props.on_change_arg
 
-class CheckBox extends Control
+class CheckBox extends GuiControl
   required_props: {'label'}
-  updaters:
-    value: (new_value) => @control\SetValue new_value
-    label: (new_value) => @control\SetLabel new_value
+  updaters: add_updaters value: (new_value) => @control\SetValue new_value
 
   do_build: (parent, component) =>
     @built_props = label: @props.label
