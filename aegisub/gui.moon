@@ -34,7 +34,7 @@ class TextCtrl extends GuiControl
   do_build: (parent, component) =>
     with wxm.TextCtrl parent.window, -1, @props.value
       \Connect wxm.EVT_COMMAND_TEXT_UPDATED, ->
-        @call 'on_change', ctrl\GetValue()
+        @call 'on_change', \GetValue()
 
 class Button extends GuiControl
   required_props: {'label'}
@@ -87,7 +87,7 @@ class ComboBox extends GuiControl
     flags = if @props.readonly then wxm.CB_READONLY else 0
     with wxm.ComboBox parent.window, -1, @props.value or '', wxm.DefaultPosition, wxm.DefaultSize, @props.items, flags
       \Connect wxm.EVT_COMMAND_COMBOBOX_SELECTED, ->
-        @call 'on_change', cb\GetSelection(), cb\GetValue(), @props.on_change_arg
+        @call 'on_change', \GetSelection(), \GetValue(), @props.on_change_arg
 
 class CheckBox extends GuiControl
   required_props: {'label'}
