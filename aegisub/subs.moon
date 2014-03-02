@@ -33,7 +33,7 @@ copy_line_proxy = =>
 
 line_proxy = (line) ->
   proxy = setmetatable({}, __index: line)
-  proxy.copy = copy_dialogue_proxy
+  proxy.copy = copy_line_proxy
   proxy
 
 class ProxyTable
@@ -123,31 +123,33 @@ class SubtitlesFile
     file\write '\n[V4+ Styles]\n'
     file\write 'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n'
     for style in *@styles
-      file\write string.format 'Style: %s,%s,%g,%s,%s,%s,%s,%d,%d,%d,%d,%g,%g,%g,%g,%d,%g,%g,%i,%i,%i,%i,%i',
-        style.name, style.font, style.fontsize,
-        ass.style_color_str style.primary,
-        ass.style_color_str style.secondary,
-        ass.style_color_str style.outline,
-        ass.style_color_str style.shadow,
+      file\write string.format 'Style: %s,%s,%g,%s,%s,%s,%s,%d,%d,%d,%d,%g,%g,%g,%g,%d,%g,%g,%i,%i,%i,%i,%i\n',
+        style.name, style.font, style.font_size,
+        ass.style_color_str style.fill_color,
+        ass.style_color_str style.karaoke_color,
+        ass.style_color_str style.border_color,
+        ass.style_color_str style.shadow_color,
         if style.bold then -1 else 0,
         if style.italic then -1 else 0,
         if style.underline then -1 else 0,
         if style.strikeout then -1 else 0,
         style.scale_x, style.scale_y, style.spacing, style.angle,
-        style.border_style, style.outline_w, style.shadow_x, style.alignment,
-        style.margin[0], style.margin[1], style.margin[2], style.encoding
+        style.border_style, style.border, style.shadow, style.alignment,
+        style.margin[1], style.margin[2], style.margin[3], style.encoding
 
     file\write '\n[Events]\n'
     file\write 'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n'
-    for event in *@dialogue
+    for event in *@events
       file\write string.format '%s: %d,%s,%s,%s,%s,%d,%d,%d,%s,%s\n',
         if event.comment then 'Comment' else 'Dialogue',
         event.layer,
         ass.time_str event.start_time,
         ass.time_str event.end_time,
         event.style, event.actor,
-        event.margin[0], event.margin[1], event.margin[2],
+        event.margin[1], event.margin[2], event.margin[3],
         event.effect, event.text
+
+    file\close!
 
 open = (filename) ->
   file = io.open filename, 'r'
