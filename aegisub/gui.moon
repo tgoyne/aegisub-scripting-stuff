@@ -190,7 +190,7 @@ open_dialog = (opts) ->
   flags = bit.band flags, wxm.FD_MULTIPLE if opts.multiple
   flags = bit.band flags, wxm.FD_FILE_MUST_EXIST if opts.must_exist != false -- nil is true
 
-  dialog = wxm.FileDialog wx.NULL, opts.message or '', opts.dir, opts.file, opts.wildcard or '*.*', flags
+  dialog = wxm.FileDialog wx.NULL, opts.message or '', opts.dir or '', opts.file or '', opts.wildcard or '*.*', flags
   if dialog\ShowModal! == wxm.ID_CANCEL
     return nil
   if opts.multiple then dialog\GetPaths() else dialog\GetPath()
@@ -199,7 +199,7 @@ save_dialog = (opts) ->
   flags = wxm.FD_SAVE
   flags = bit.band flags, wxm.FD_OVERWRITE_PROMPT unless opts.force_overwrite
 
-  dialog = wxm.FileDialog wx.NULL, opts.message or '', opts.dir, opts.file, opts.wildcard or '*.*', flags
+  dialog = wxm.FileDialog wx.NULL, opts.message or '', opts.dir or '', opts.file or '', opts.wildcard or '*.*', flags
   if dialog\ShowModal! == wxm.ID_CANCEL
     return nil
   dialog\GetPath()
