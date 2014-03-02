@@ -168,6 +168,7 @@ class Window
     frame\Connect wxm.EVT_IDLE, ->
       if @update!
         @window\Layout!
+        @window\Fit!
 
     @window = frame
     @sizer = wxm.BoxSizer wxm.HORIZONTAL
