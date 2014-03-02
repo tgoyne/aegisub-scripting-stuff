@@ -1,6 +1,7 @@
 util = require 'aegisub.util'
 lpeg = require 'lpeg'
 require'fun'!
+require 'checks'
 
 error    = error
 pairs    = pairs
@@ -92,16 +93,23 @@ do
   event_peg = Ct event_peg
 
 -- Generates ASS hexadecimal string from R, G, B integer components, in &HBBGGRR& format
-color_str = (c) -> sformat "&H%02X%02X%02X&", c.b or 0, c.g or 0, c.r or 0
+color_str = (c) ->
+  checks 'table'
+  sformat "&H%02X%02X%02X&", c.b or 0, c.g or 0, c.r or 0
 -- Format an alpha-string for \Xa style overrides
 alpha_str = (a) ->
+  checks 'table|number'
   a = a.a if type(a) == 'table'
   sformat "&H%02X&", a or 0
 -- Format an ABGR string for use in style definitions (these don't end with & either)
-style_color_str = (c) -> sformat "&H%02X%02X%02X%02X", c.a or 0, c.b or 0, c.g or 0, c.r or 0
+style_color_str = (c) ->
+  checks 'table'
+  sformat "&H%02X%02X%02X%02X", c.a or 0, c.b or 0, c.g or 0, c.r or 0
 
 -- Extract colour components of an ASS colour
-parse_color = (s) -> lpeg.match color_peg, s
+parse_color = (s) ->
+  checks 'string'
+  lpeg.match color_peg, s
 
 -- Create an alpha override code from a style definition colour code
 alpha_from_style = (scolor) -> alpha_str parse_color scolor
@@ -109,19 +117,24 @@ alpha_from_style = (scolor) -> alpha_str parse_color scolor
 -- Create an colour override code from a style definition colour code
 color_from_style = (scolor) -> color_str parse_color scolor
 
-parse_time = (str) -> lpeg.match(time_peg, str) or 0
+parse_time = (str) ->
+  checks 'string'
+  lpeg.match(time_peg, str) or 0
 
 time_str = (ms) ->
+  checks 'number'
   sformat '%d:%02d:%02d.%02d', ms / 3600000, (ms % 3600000) / 60000,
     (ms % 60000) / 1000, (ms % 1000) / 10
 
-parse_style = (str, skip_trim) ->
-  if not skip_trim
+parse_style = (str, descriptor) ->
+  checks 'string', '?string'
+  if not descriptor
     descriptor, str = str\match('([^:]+): *(.+)')
     return nil unless descriptor == 'Style' and str
   style_peg str
 
 parse_event = (str, descriptor) ->
+  checks 'string', '?string'
   if not descriptor
     descriptor, str = str\match('([^:]+): *(.+)')
     return nil unless (descriptor == 'Dialogue' or descriptor == 'Comment') and str
