@@ -92,6 +92,13 @@ class Control
     @component = component
     @built_props = @props
     @control = @do_build parent, component
+
+    if @force_initial_update
+      if @built_pors == @props
+        @built_props = util.copy @props
+      for prop in *@force_initial_update
+        @built_props[prop] = nil
+
     @apply_diff @built_props, @props
     @control
 
@@ -113,12 +120,10 @@ class Control
       new = new_props[k]
       continue unless new != nil
 
-      if old == nil
-        v(@, new)
-      elseif type(old) == 'table'
+      if old and type(old) == 'table'
         if not shallow_table_eq old, new
           v(@, new)
-      elseif old != new
+      elseif not old or old != new
         v(@, new)
 
   call: (name, ...) =>
