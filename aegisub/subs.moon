@@ -157,7 +157,7 @@ open = (filename) ->
 
   ret = SubtitlesFile!
   for line in file\lines()
-    descriptor, value = line\match('([^:]+): *(.+)')
+    descriptor, value = line\match('([^:]+): *(.-)\r?$')
     continue unless descriptor and value
     continue if descriptor[1] == ';'
 
