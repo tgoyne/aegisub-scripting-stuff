@@ -99,19 +99,39 @@ class CheckBox extends GuiControl
       \Connect wxm.EVT_COMMAND_CHECKBOX_CLICKED, (e) ->
         @call 'on_change', e\IsChecked(), @props.on_change_arg
 
+button_masks =
+  ok:         wxm.OK
+  cancel:     wxm.CANCEL
+  yes:        wxm.YES
+  no:         wxm.NO
+  apply:      wxm.APPLY
+  close:      wxm.CLOSE
+  help:       wxm.HELP
+  no_default: wxm.NO_DEFAULT
+
+button_names =
+  [wxm.ID_OK]: 'ok'
+  [wxm.ID_CANCEL]: 'cancel'
+  [wxm.ID_YES]: 'yes'
+  [wxm.ID_NO]: 'no'
+  [wxm.ID_APPLY]: 'apply'
+  [wxm.ID_CLOSE]: 'close'
+  [wxm.ID_HELP]: 'help'
+
 class StandardButtons extends Control
   do_build: (parent, component) =>
     buttons = 0
     for btn in *@props.buttons
-      switch btn
-        when 'ok'         then buttons = bit.bor buttons, wxm.OK
-        when 'cancel'     then buttons = bit.bor buttons, wxm.CANCEL
-        when 'yes'        then buttons = bit.bor buttons, wxm.YES
-        when 'no'         then buttons = bit.bor buttons, wxm.NO
-        when 'apply'      then buttons = bit.bor buttons, wxm.APPLY
-        when 'close'      then buttons = bit.bor buttons, wxm.CLOSE
-        when 'help'       then buttons = bit.bor buttons, wxm.HELP
-        when 'no_default' then buttons = bit.bor buttons, wxm.NO_DEFAULT
+      flag = button_masks[btn]
+      if flag
+        buttons = bit.bor buttons, flag
+
+    parent.window\Connect wxm.EVT_COMMAND_BUTTON_CLICKED, (e) ->
+      e\Skip!
+      name = button_names[e\GetId()]
+      if name
+        @call 'on_' .. name, @["on_#{name}_arg"]
+
     parent.window\CreateButtonSizer buttons
 
   update: -> false
