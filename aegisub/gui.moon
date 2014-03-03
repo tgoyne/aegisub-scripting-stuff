@@ -34,7 +34,7 @@ class TextCtrl extends GuiControl
   do_build: (parent, component) =>
     with wxm.TextCtrl parent.window, -1, @props.value
       \Connect wxm.EVT_COMMAND_TEXT_UPDATED, ->
-        @call 'on_change', \GetValue()
+        @call 'on_change', \GetValue(), @props.on_change_arg
 
 class Button extends GuiControl
   required_props: {'label'}
