@@ -191,23 +191,29 @@ class Sizer extends Container
     @sizer\Detach src - 1
     @sizer\Insert dst - 1, child
 
-class Column extends Sizer
-  dir: wxm.VERTICAL
+class BoxSizer extends Sizer
   create_sizer: (parent, component) =>
-    wxm.BoxSizer @dir
+    wxm.BoxSizer @props.dir
 
-class Row extends Sizer
-  dir: wxm.HORIZONTAL
+class StaticBoxSizer extends Sizer
   create_sizer: (parent, component) =>
-    wxm.BoxSizer @dir
+    wxm.StaticBoxSizer @props.dir, parent.window, @props.label
 
-class StaticBox extends Sizer
+class Column extends Component
+  required_props: {'items'}
+  render: => BoxSizer dir: wxm.VERTICAL, items: @props.items
+
+class Row extends Component
+  required_props: {'items'}
+  render: => BoxSizer dir: wxm.HORIZONTAL, items: @props.items
+
+class StaticBox extends Component
   required_props: {'items', 'direction', 'label'}
   prop_types: direction: 'string'
 
-  create_sizer: (parent, component) =>
-    @dir = if @props.direction == 'vertical' then wxm.VERTICAL else wxm.HORIZONTAL
-    wxm.StaticBoxSizer @dir, parent.window, @props.label
+  render: =>
+    dir = if @props.direction == 'vertical' then wxm.VERTICAL else wxm.HORIZONTAL
+    StaticBoxSizer dir: dir, label: @props.label, items: @props.items
 
 class Window
   new: (opts) =>
