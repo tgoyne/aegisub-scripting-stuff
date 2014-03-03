@@ -11,7 +11,7 @@ wxm = {k\sub(3), v for k, v in pairs wx}
 class GuiControl extends Control
   updaters:
     label: (value) => @control\SetLabel value
-    enabled: (value) => @control\Enable if value == nil then true else value
+    enable: (value) => @control\Enable if value == nil then true else value
     hidden: (value) => @control\Show not value
     tooltip: (value) => @control\SetToolTip value
   force_initial_update: {'tooltip'}

@@ -60,7 +60,7 @@ class FilePropertiesDialog extends gui.Component
             gui.Button
               label: tr'From &video'
               on_click: @set_from_video
-              enabled: false
+              enable: false
           }
         gui.StaticBox
           direction: 'flexgrid'
