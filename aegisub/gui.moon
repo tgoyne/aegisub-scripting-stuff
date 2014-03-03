@@ -34,7 +34,7 @@ class TextCtrl extends GuiControl
   do_build: (parent, component) =>
     with wxm.TextCtrl parent.window, -1, @props.value
       \Connect wxm.EVT_COMMAND_TEXT_UPDATED, ->
-        @call 'on_change', \GetValue(), @props.on_change_arg
+        @call 'on_change', \GetValue()
 
 class Button extends GuiControl
   required_props: {'label'}
@@ -44,7 +44,7 @@ class Button extends GuiControl
     @built_props = label: @props.label
     with wxm.Button parent.window, -1, @props.label
       \Connect wxm.EVT_COMMAND_BUTTON_CLICKED, ->
-        @call 'on_click', @props.on_click_arg
+        @call 'on_click'
 
 class CheckList extends GuiControl
   do_build: (parent, component) =>
@@ -87,7 +87,7 @@ class ComboBox extends GuiControl
     flags = if @props.readonly then wxm.CB_READONLY else 0
     with wxm.ComboBox parent.window, -1, @props.value or '', wxm.DefaultPosition, wxm.DefaultSize, @props.items, flags
       \Connect wxm.EVT_COMMAND_COMBOBOX_SELECTED, ->
-        @call 'on_change', \GetSelection(), \GetValue(), @props.on_change_arg
+        @call 'on_change', \GetSelection(), \GetValue()
 
 class CheckBox extends GuiControl
   required_props: {'label'}
@@ -97,7 +97,7 @@ class CheckBox extends GuiControl
     @built_props = label: @props.label
     with wxm.CheckBox parent.window, -1, @props.label
       \Connect wxm.EVT_COMMAND_CHECKBOX_CLICKED, (e) ->
-        @call 'on_change', e\IsChecked(), @props.on_change_arg
+        @call 'on_change', e\IsChecked()
 
 button_masks =
   ok:         wxm.OK
@@ -130,7 +130,7 @@ class StandardButtons extends Control
       e\Skip!
       name = button_names[e\GetId()]
       if name
-        @call 'on_' .. name, @["on_#{name}_arg"]
+        @call 'on_' .. name
 
     parent.window\CreateButtonSizer buttons
 

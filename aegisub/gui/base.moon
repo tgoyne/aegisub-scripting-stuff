@@ -13,6 +13,21 @@ shallow_table_eq = (a, b) ->
     return false unless v1 == v2
   true
 
+append_varpack = (a, n, b, ...) ->
+  if n == 0 then a else b, append_varpack a, n - 1, ...
+
+call_handler = (name, ...) =>
+  fn = @props[name]
+  return unless fn
+
+  arg = @props[name .. '_arg']
+  if not arg
+    return fn @component, ...
+  count = select '#', ...
+  if count == 0
+    return fn @component, arg
+  fn @component, append_varpack arg, count, ...
+
 class Component
   new: (props) =>
     if not @render
@@ -40,9 +55,7 @@ class Component
     @state[key] = value
     @dirty = true
 
-  call: (name, ...) =>
-    if @props[name]
-      @props[name](@component, ...)
+  call: call_handler
 
   update: (new_props) =>
     if new_props
@@ -128,9 +141,7 @@ class Control
       @props = new_props
     false
 
-  call: (name, ...) =>
-    if @props[name]
-      @props[name](@component, ...)
+  call: call_handler
 
 class Container extends Control
   required_props: {'items'}
