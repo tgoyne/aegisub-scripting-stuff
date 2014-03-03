@@ -1,0 +1,19 @@
+language: c
+
+env:
+  - LUA="luajit"
+
+branches:
+  only:
+    - master
+
+install:
+  - sudo apt-get install luajit
+  - sudo apt-get install luarocks
+  - sudo luarocks install luafilesystem
+  - sudo luarocks install busted
+  - sudo luarocks install moonscript
+  - sudo luarocks install checks
+  - wget https://raw.github.com/rtsisyk/luafun/master/fun.lua
+
+script: busted

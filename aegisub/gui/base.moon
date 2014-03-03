@@ -1,6 +1,5 @@
 util = require 'aegisub.util'
 require'fun'!
-require 'strict'
 
 property_types =
   label: 'string'
