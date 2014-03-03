@@ -212,7 +212,7 @@ class Dialog extends Sizer
   updaters: add_updaters
     title: (value) => @window\SetTitle value
 
-show = (component) ->
+create_dialog = (component) ->
   frame = wxm.Dialog wx.NULL, -1, '', wxm.DefaultPosition,
                      wxm.Size(600, 400), wxm.DEFAULT_FRAME_STYLE
 
@@ -229,7 +229,10 @@ show = (component) ->
   sizer\Add component\build parent, component
 
   frame\SetSizerAndFit sizer
-  frame\Show true
+  frame
+
+show = (component) -> create_dialog(component)\Show true
+show_modal = (component) -> create_dialog(component)\ShowModal true
 
 open_dialog = (opts) ->
   flags = wxm.FD_OPEN
@@ -254,4 +257,4 @@ main_loop = -> wxm.GetApp!\MainLoop!
 
 {:Label, :Window, :Component, :Column, :TextCtrl, :Button, :Row, :CheckList,
   :StandardButtons, :StaticBox, :main_loop, :open_dialog, :save_dialog,
-  :ComboBox, :CheckBox, :Dialog, :show}
+  :ComboBox, :CheckBox, :Dialog, :show, :show_modal}
