@@ -44,8 +44,6 @@ class PasteOverDialog extends gui.Component
   render: =>
     gui.Dialog
       title: 'Select Fields to Paste Over'
-      buttons: {'ok', 'cancel', 'help'}
-      help_page: 'manual:Paste Over'
       items: {
         gui.StaticBox
           direction: 'vertical'
@@ -76,6 +74,9 @@ class PasteOverDialog extends gui.Component
             on_click: @select_text
             enable: any ((k, v) -> not v == (k == 'text')), @state
         }
+        gui.StandardButtons
+          buttons: {'ok', 'cancel', 'help'}
+          help_page: 'manual:Paste Over'
       }
 
 app.register_command

@@ -101,8 +101,20 @@ class CheckBox extends GuiControl
 
 class StandardButtons extends Control
   do_build: (parent, component) =>
-    wxm.StaticText parent.window, -1, 'standardbuttons'
-  update: => false
+    buttons = 0
+    for btn in *@props.buttons
+      switch btn
+        when 'ok'         then buttons = bit.bor buttons, wxm.OK
+        when 'cancel'     then buttons = bit.bor buttons, wxm.CANCEL
+        when 'yes'        then buttons = bit.bor buttons, wxm.YES
+        when 'no'         then buttons = bit.bor buttons, wxm.NO
+        when 'apply'      then buttons = bit.bor buttons, wxm.APPLY
+        when 'close'      then buttons = bit.bor buttons, wxm.CLOSE
+        when 'help'       then buttons = bit.bor buttons, wxm.HELP
+        when 'no_default' then buttons = bit.bor buttons, wxm.NO_DEFAULT
+    parent.window\CreateButtonSizer buttons
+
+  update: -> false
 
 class Sizer extends Container
   do_build: (parent, component) =>
