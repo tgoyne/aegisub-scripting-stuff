@@ -23,8 +23,7 @@ class FilePropertiesDialog extends gui.Component
   make_text_property: (label, key) =>
     TextProperty label: label, key: key, value: @state[key] or '', on_change: @set_state
   set_sbas: (value) => @set_state 'ScaledBorderAndShadow', value and 'yes' or 'no'
-  set_res: (value, field) =>
-    @set_state field, value\gsub '[^0-9]', ''
+  set_res: (value, field) => @set_state field, value
 
   render: =>
     gui.Dialog
@@ -47,13 +46,15 @@ class FilePropertiesDialog extends gui.Component
           direction: 'horizontal'
           label: tr'Resolution'
           items: {
-            gui.TextCtrl
-              value: @state.PlayResX
+            gui.SpinCtrl
+              value: tonumber @state.PlayResX
+              max: 10000
               on_change: @set_res
               on_change_arg: 'PlayResX'
             gui.Label label: 'x'
-            gui.TextCtrl
-              value: @state.PlayResY
+            gui.SpinCtrl
+              value: tonumber @state.PlayResY
+              max: 10000
               on_change: @set_res
               on_change_arg: 'PlayResY'
             gui.Button

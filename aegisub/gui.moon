@@ -36,6 +36,25 @@ class TextCtrl extends GuiControl
       \Connect wxm.EVT_COMMAND_TEXT_UPDATED, ->
         @call 'on_change', \GetValue()
 
+class SpinCtrl extends GuiControl
+  required_props: {'value'}
+  prop_types:
+    value: 'number'
+    min: 'number'
+    max: 'number'
+  updaters: add_updaters
+    value: (new_value) => @control\SetValue new_value
+    min: (new_value) => @control\SetRange new_value, util.max new_value, @props.max or 100
+    max: (new_value) => @control\SetRange util.min(@props.min or 0, new_value), new_value
+
+  do_build: (parent, component) =>
+    @built_props = {}
+    with wxm.SpinCtrl parent.window, -1
+      \Connect wxm.EVT_COMMAND_SPINCTRL_UPDATED, ->
+        value = \GetValue()
+        if value != @props.value
+          @call 'on_change', value
+
 class Button extends GuiControl
   required_props: {'label'}
   prop_types: on_click: 'function'
@@ -277,4 +296,4 @@ main_loop = -> wxm.GetApp!\MainLoop!
 
 {:Label, :Window, :Component, :Column, :TextCtrl, :Button, :Row, :CheckList,
   :StandardButtons, :StaticBox, :main_loop, :open_dialog, :save_dialog,
-  :ComboBox, :CheckBox, :Dialog, :show, :show_modal}
+  :ComboBox, :CheckBox, :Dialog, :show, :show_modal, :SpinCtrl}
