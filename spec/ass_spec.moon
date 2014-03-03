@@ -3,8 +3,6 @@ ass = require 'aegisub.ass'
 describe 'alpha_str', ->
   it 'should give &H00& for 0', ->
     assert.are.equal '&H00&', ass.alpha_str 0
-  it 'should give &H00& for nil', ->
-    assert.are.equal '&H00&', ass.alpha_str nil
   it 'should give &H00& for table without alpha', ->
     assert.are.equal '&H00&', ass.alpha_str r: 255, g: 255, b: 255
   it 'should give &HFF& for 255', ->
