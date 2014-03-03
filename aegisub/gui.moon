@@ -185,6 +185,40 @@ class Window
   update: =>
     @contents\update!
 
+class Dialog extends Sizer
+  required_props: {'title', 'items'}
+  prop_types:
+    title: 'string'
+    items: 'table'
+    direction: 'string'
+
+  create_sizer: (parent, component) =>
+    @built_props = {}
+    @dir = if @props.direction == 'horizontal' then wxm.HORIZONTAL else wxm.VERTICAL
+    wxm.BoxSizer @dir
+
+  updaters: add_updaters
+    title: (value) => @window\SetTitle value
+
+show = (component) ->
+  frame = wxm.Dialog wx.NULL, -1, '', wxm.DefaultPosition,
+                     wxm.Size(600, 400), wxm.DEFAULT_FRAME_STYLE
+
+  frame\Connect wxm.EVT_IDLE, ->
+    if component\update!
+      frame\Layout!
+      frame\Fit!
+
+  sizer = wxm.BoxSizer wxm.HORIZONTAL
+  parent =
+    window: frame
+    add: (ctrl) -> sizer\Add ctrl
+
+  sizer\Add component\build parent, component
+
+  frame\SetSizerAndFit sizer
+  frame\Show true
+
 open_dialog = (opts) ->
   flags = wxm.FD_OPEN
   flags = bit.bor flags, wxm.FD_MULTIPLE if opts.multiple
@@ -207,4 +241,5 @@ save_dialog = (opts) ->
 main_loop = -> wxm.GetApp!\MainLoop!
 
 {:Label, :Window, :Component, :Column, :TextCtrl, :Button, :Row, :CheckList,
-  :StandardButtons, :StaticBox, :main_loop, :open_dialog, :save_dialog, :ComboBox, :CheckBox}
+  :StandardButtons, :StaticBox, :main_loop, :open_dialog, :save_dialog,
+  :ComboBox, :CheckBox, :Dialog, :show}

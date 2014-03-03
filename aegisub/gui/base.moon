@@ -63,6 +63,21 @@ class Component
     else
       false
 
+apply_diff = (old_props, new_props) =>
+  assert old_props and type(old_props) == 'table', 'old_props is nil'
+  return unless new_props
+
+  for k, v in pairs @@updaters
+    old = old_props[k]
+    new = new_props[k]
+    continue unless new != nil
+
+    if old and type(old) == 'table'
+      if not shallow_table_eq old, new
+        v(@, new)
+    elseif not old or old != new
+      v(@, new)
+
 class Control
   required_props: {}
   prop_types: {}
@@ -105,26 +120,13 @@ class Control
   destroy: =>
     @control\Destroy! if @control
 
+  apply_diff: apply_diff
+
   update: (new_props) =>
     if new_props
       @apply_diff @props, new_props
       @props = new_props
     false
-
-  apply_diff: (old_props, new_props) =>
-    assert old_props and type(old_props) == 'table', 'old_props is nil'
-    return unless new_props
-
-    for k, v in pairs @@updaters
-      old = old_props[k]
-      new = new_props[k]
-      continue unless new != nil
-
-      if old and type(old) == 'table'
-        if not shallow_table_eq old, new
-          v(@, new)
-      elseif not old or old != new
-        v(@, new)
 
   call: (name, ...) =>
     if @props[name]
@@ -138,10 +140,14 @@ class Container extends Control
     for child in *@props.items
       @add child\build @, component
 
+  apply_diff: apply_diff
+
   update: (new_props) =>
     if not new_props
       did_update = [child\update! for child in *@props.items]
       return any ((x) -> x), did_update
+
+    @apply_diff @props, new_props
 
     keyed = {}
     unkeyed = {}

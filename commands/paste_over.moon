@@ -3,8 +3,7 @@ clipboard = require 'aegisub.clipboard'
 gui       = require 'aegisub.gui'
 tr        = require 'aegisub.gettext'
 
-require 'moon'
-require('fun')()
+require'fun'!
 
 local *
 
@@ -43,38 +42,41 @@ class PasteOverDialog extends gui.Component
     @set_state 'text', true
 
   render: =>
-    gui.Column items: {
-      gui.StaticBox
-        direction: 'vertical'
-        label: tr'Fields'
-        margin: 5
-        padding: 5
-        expand: true
-        items: {
-          gui.CheckList
-            on_checked: @set_state
-            items: [{label: field.label, key: field.key, value: @state[field.key]} for field in *@props.fields]
+    gui.Dialog
+      title: 'Select Fields to Paste Over'
+      buttons: {'ok', 'cancel', 'help'}
+      help_page: 'manual:Paste Over'
+      items: {
+        gui.StaticBox
+          direction: 'vertical'
+          label: tr'Fields'
+          margin: 5
+          padding: 5
+          expand: true
+          items: {
+            gui.CheckList
+              on_checked: @set_state
+              items: [{label: field.label, key: field.key, value: @state[field.key]} for field in *@props.fields]
+          }
+        gui.Row items: {
+          gui.Button
+            label: '&All'
+            on_click: @select_all
+            enable: any ((_, v) -> not v), @state
+          gui.Button
+            label: '&None'
+            on_click: @select_none
+            enable: any ((_, v) -> v), @state
+          gui.Button
+            label: '&Times'
+            on_click: @select_times
+            enable: any ((k, v) -> not v == (k == 'start_time' or k == 'end_time')), @state
+          gui.Button
+            label: 'T&ext'
+            on_click: @select_text
+            enable: any ((k, v) -> not v == (k == 'text')), @state
         }
-      gui.Row items: {
-        gui.Button
-          label: '&All'
-          on_click: @select_all
-          enable: any ((_, v) -> not v), @state
-        gui.Button
-          label: '&None'
-          on_click: @select_none
-          enable: any ((_, v) -> v), @state
-        gui.Button
-          label: '&Times'
-          on_click: @select_times
-          enable: any ((k, v) -> not v == (k == 'start_time' or k == 'end_time')), @state
-        gui.Button
-          label: 'T&ext'
-          on_click: @select_text
-          enable: any ((k, v) -> not v == (k == 'text')), @state
       }
-      gui.StandardButtons buttons: 'ok', 'cancel', 'help', help_page: 'manual:Paste Over'
-    }
 
 app.register_command
   name: 'edit/line/paste/over'
@@ -85,10 +87,5 @@ app.register_command
   call: (context) ->
     selected = app.options.get 'Tool/Paste Lines Over/Fields'
     data = {f.key, v for _, f, v in zip(fields, selected)}
-
-    window = gui.Window
-      title: 'Select Fields to Paste Over'
-      contents: PasteOverDialog fields: fields, data: data
-
-    window\show!
+    gui.show PasteOverDialog fields: fields, data: data
 
