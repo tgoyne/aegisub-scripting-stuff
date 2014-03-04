@@ -28,6 +28,14 @@ call_handler = (name, ...) =>
   fn @component, append_varpack arg, count, ...
 
 class Component
+  rendering_component = nil
+  call_render = =>
+    old_rendering_component = rendering_component
+    rendering_component = @
+    child = @render!
+    rendering_component = old_rendering_component
+    child
+
   new: (props) =>
     if not @render
       error 'Components must have a render method', 3
@@ -35,14 +43,15 @@ class Component
       error 'Contructing a compontent requires a properties table', 3
 
     @props = props
+    @component = rendering_component
     @state = if @initial_state then @initial_state! else {}
 
   build: (parent, component) =>
     assert parent and component and type(component) == 'table'
     @parent = parent
-    @component = component
+    @component = component if not @component
     @destroy!
-    @child = @render!
+    @child = call_render @
     @child\build parent, @
 
   destroy: =>
@@ -61,7 +70,7 @@ class Component
       @props = new_props
     if @dirty or new_props
       @dirty = false
-      new_child = @render!
+      new_child = call_render @
       assert new_child
       if new_child.__class == @child.__class
         @child\update new_child.props

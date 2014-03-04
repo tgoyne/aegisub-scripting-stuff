@@ -9,6 +9,21 @@ describe 'Component', ->
       render: ->
     assert.is.error -> NoOpComponent!
 
+  it 'should pass the constructing component to callbacks', ->
+    class ChildComponent extends gui.Component
+      render: =>
+        @call 'on_render'
+        build: ->
+    class WrapperComponent extends gui.Component
+      render: => @props.item
+    class MainComponent extends gui.Component
+      render: => WrapperComponent item: ChildComponent on_render: @on_render
+      on_render: => @on_render_called = true
+
+    comp = MainComponent{}
+    comp\build {}, {}
+    assert.is.true comp.on_render_called
+
 describe 'Container', ->
   class TestContainer extends gui.Container
     new: (...) =>
