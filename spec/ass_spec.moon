@@ -1,4 +1,5 @@
 ass = require 'aegisub.ass'
+require'fun'!
 
 describe 'alpha_str', ->
   it 'should give &H00& for 0', ->
@@ -125,3 +126,71 @@ describe 'parse_event', ->
     assert.is.same {5, 10, 15}, event.margin
     assert.is.equal 'effect', event.effect
     assert.is.equal 'hello, world', event.text
+
+describe 'lex_dialogue_body', ->
+  expect_tokens = (str, ...) ->
+    tokens = ass.lex_dialogue_body str
+    expected = {...}
+
+    assert.is.equal #expected, #tokens
+    for _, expected, actual in zip expected, tokens
+      if type(expected) == 'string'
+        assert.is.equal expected, actual[1]
+        assert.is.equal 1, actual[2]\len()
+      else
+        assert.is.equal expected[1], actual[1]
+        assert.is.equal expected[2], actual[2]\len()
+
+  describe 'plain text', ->
+    it 'should mark plain strings as text', ->
+      expect_tokens 'hello there', {'text', 11}
+
+  describe 'comments', ->
+    it 'should mark blocks without override tags as comments', ->
+      expect_tokens '{a}b', 'comment', 'text'
+    it 'should support mixed comments/tags', ->
+      expect_tokens '{a\\b}c', 'comment', 'tag', 'text'
+
+  describe 'override tags', ->
+    it 'should support basic override tags', ->
+      expect_tokens '{\\b1}bold text{\\b0}', 'tag', 'arg', {'text', 9}, 'tag', 'arg'
+
+    it 'should support \\fn', ->
+      expect_tokens '{\\fnComic Sans MS}text', {'tag', 2}, {'arg', 13}, {'text', 4}
+
+    it 'should support multiple arguments to tags', ->
+      expect_tokens '{\\pos(0,0)}a', {'tag', 3}, 'arg', 'arg', 'text'
+
+    it 'should support gratuitous whitespace', ->
+      expect_tokens '{\\ pos ( 0 , 0 )}a', {'tag', 3}, 'arg', 'arg', 'text'
+
+    it 'should support color tags', ->
+      expect_tokens '{\\c&HFFFFFF&\\2c&H0000FF&\\3c&H000000&}a',
+        'tag', {'arg', 9},
+        {'tag', 2}, {'arg', 9},
+        {'tag', 2}, {'arg', 9},
+        'text'
+
+    it 'should trim whitespace from arguments', ->
+      expect_tokens '{\\b 1 }', 'tag', 'arg'
+
+    it 'should support transforms', ->
+      tokens = ass.lex_dialogue_body '{\\t(0,100,\\clip(1, m 0 0 l 10 10 10 20))}a'
+      expected = {
+        {'tag', 't'}
+        {'arg', '0'}
+        {'arg', '100'}
+        {'block', {
+          {'tag', 'clip'}
+          {'arg', '1'}
+          {'arg', 'm 0 0 l 10 10 10 20'}
+        }}
+        {'text', 'a'}
+      }
+      assert.is.same expected, tokens
+
+  describe 'malformed lines', ->
+    it 'should mark } with no opening { as text', ->
+      expect_tokens 'a}b', {'text', 3}
+    it 'should allow missing final )', ->
+      expect_tokens '{\\pos(0,0}a', {'tag', 3}, 'arg', 'arg', 'text'
