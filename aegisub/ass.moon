@@ -9,6 +9,7 @@ select   = select
 sformat  = string.format
 tonumber = tonumber
 type     = type
+tinsert  = table.insert
 
 local *
 
@@ -168,5 +169,51 @@ lex_dialogue_body = (str) ->
   checks 'string'
   lpeg.match dialogue_body_peg, str
 
+gen_dialogue_body = (tbl) ->
+  checks 'table'
+
+  tag_str = (tok) ->
+    tag_name = '\\' .. tok[2]
+    return tag_name if #tok == 2
+    return tag_name .. tok[3] if #tok == 3 and tok[2] != 'clip'
+
+    out = {tag_name, '('}
+    for i = 3, #tok
+      if type(tok[i]) == 'table' then
+        for _, tag in ipairs tok[i]
+          tinsert out, tag_str tag
+      else
+        tinsert out, tok[i]
+      if i < #tok
+        tinsert out, ','
+    tinsert out, ')'
+    table.concat out, ''
+
+  out = {}
+  state = 'text'
+
+  for _, tok in ipairs tbl
+    old_state = state
+    state = tok[1]
+    if state != old_state
+      if old_state == 'text'
+        tinsert out, '{'
+      elseif state == 'text'
+        tinsert out, '}'
+      else
+        tinsert out, '}{'
+
+    switch state
+      when 'text', 'comment'
+        tinsert out, tok[2]
+
+      when 'tag'
+        tinsert out, tag_str tok
+
+  if state != 'text'
+    tinsert out, '}'
+  table.concat out, ''
+
 {:color_str, :alpha_str, :style_color_str, :parse_color, :alpha_from_style,
-  :color_from_style, :parse_time, :time_str, :parse_style, :parse_event, :lex_dialogue_body}
+  :color_from_style, :parse_time, :time_str, :parse_style, :parse_event,
+  :lex_dialogue_body, :gen_dialogue_body}

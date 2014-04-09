@@ -176,3 +176,45 @@ describe 'lex_dialogue_body', ->
       expect_tokens 'a}b', {'text', 'a}b'}
     it 'should allow missing final )', ->
       expect_tokens '{\\pos(0,0}a', {'tag', 'pos', '0', '0'}, {'text', 'a'}
+
+describe 'gen_dialogue_body', ->
+  expect_str = (str, ...) ->
+    assert.is.equal str, ass.gen_dialogue_body {...}
+
+  describe 'plain text', ->
+    it 'should convert text blocks to plain strings', ->
+      expect_str 'hello there', {'text', 'hello there'}
+
+  describe 'comments', ->
+    it 'should convert comments to comment blocks', ->
+      expect_str '{a}b', {'comment', 'a'}, {'text', 'b'}
+    it 'should not combine comment blocks and override blocks', ->
+      expect_str '{a}{\\b}c', {'comment', 'a'}, {'tag', 'b'}, {'text', 'c'}
+
+  describe 'override tags', ->
+    it 'should support basic override tags', ->
+      expect_str '{\\b1}bold text{\\b0}', {'tag', 'b', '1'}, {'text', 'bold text'}, {'tag', 'b', '0'}
+
+    it 'should support \\fn', ->
+      expect_str '{\\fnComic Sans MS}text', {'tag', 'fn', 'Comic Sans MS'}, {'text', 'text'}
+
+    it 'should support multiple arguments to tags', ->
+      expect_str '{\\pos(0,0)}a', {'tag', 'pos', '0', '0'}, {'text', 'a'}
+
+    it 'should support zero arguments to tags', ->
+      expect_str '{\\r}a', {'tag', 'r'}, {'text', 'a'}
+
+    it 'should parenthesize one-arg clip', ->
+      expect_str '{\\clip(m 0 0)}', {'tag', 'clip', 'm 0 0'}
+
+    it 'should support color tags', ->
+      expect_str '{\\c&HFFFFFF&\\2c&H0000FF&\\3c&H000000&}a',
+        {'tag', 'c', '&HFFFFFF&'},
+        {'tag', '2c', '&H0000FF&'},
+        {'tag', '3c', '&H000000&'},
+        {'text', 'a'}
+
+    it 'should support transforms', ->
+      expect_str '{\\t(0,100,\\b1\\clip(1,m 0 0 l 10 10 10 20))}a',
+        {'tag', 't', '0', '100', {{'tag', 'b', '1'}, {'tag', 'clip', '1', 'm 0 0 l 10 10 10 20'}}},
+        {'text', 'a'}
