@@ -92,31 +92,27 @@ do
 
   event_peg = Ct event_peg
 
-  -- Dialogue body lexing
-  capture = (label, pat) -> Ct Cc(label) * C(pat)
-
+  -- Dialogue body parsing
   ArgChar = P(1) - S'\\},)'
-  BasicArg = capture 'arg', (ArgChar - P'(') * (ArgChar - P' ' + P' '^1 * ArgChar)^0
+  BasicArg = C (ArgChar - P'(') * (ArgChar - P' ' + P' '^1 * ArgChar)^0
   ArgSep = Space * ',' * Space
 
-  TagName = capture 'tag', P'r' + P'fn' + (R'09' + R'az') * R'az'^0
+  TagName = C(P'r' + P'fn' + (R'09' + R'az') * R'az'^0)
 
-  Comment = capture 'comment', (P(1) - S'\\}')^1
+  Comment = Ct Cc'comment' * C (P(1) - S'\\}')^1
 
   BlockContents = P{
     'BlockContents',
-    Arg: BasicArg + Ct(Cc'block' * Ct (V'BlockContents' - P')')^1)
+    Arg: BasicArg + Ct (V'BlockContents' - P')')^1
     Args: (P'(' * Space * V'Arg' * (ArgSep * V'Arg')^0 * Space * (P')' + #P'}')) + V'Arg'^-1
-    Tag: P'\\' * Space * TagName * Space * V'Args'
+    Tag: P'\\' * Space * Ct(Cc'tag' * TagName * Space * V'Args')
     BlockContents: P' '^1 + V'Tag' + Comment
   }
 
   OverrideBlock = '{' * BlockContents^0 * '}'
 
-  PlainText = P(1) - OverrideBlock
-  PlainTextCapture = capture 'text', PlainText^1
-  dialogue_body_peg = Ct (OverrideBlock + PlainTextCapture)^0
-
+  PlainText = Ct Cc'text' * C (P(1) - OverrideBlock)^1
+  dialogue_body_peg = Ct (OverrideBlock + PlainText)^0
 
 -- Generates ASS hexadecimal string from R, G, B integer components, in &HBBGGRR& format
 color_str = (c) ->
@@ -167,7 +163,6 @@ parse_event = (str, descriptor) ->
   event = lpeg.match event_peg, str
   event.comment = descriptor == 'Comment' if event
   event
-
 
 lex_dialogue_body = (str) ->
   checks 'string'

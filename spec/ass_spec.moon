@@ -129,68 +129,50 @@ describe 'parse_event', ->
 
 describe 'lex_dialogue_body', ->
   expect_tokens = (str, ...) ->
-    tokens = ass.lex_dialogue_body str
-    expected = {...}
-
-    assert.is.equal #expected, #tokens
-    for _, expected, actual in zip expected, tokens
-      if type(expected) == 'string'
-        assert.is.equal expected, actual[1]
-        assert.is.equal 1, actual[2]\len()
-      else
-        assert.is.equal expected[1], actual[1]
-        assert.is.equal expected[2], actual[2]\len()
+    assert.is.same {...}, ass.lex_dialogue_body str
 
   describe 'plain text', ->
     it 'should mark plain strings as text', ->
-      expect_tokens 'hello there', {'text', 11}
+      expect_tokens 'hello there', {'text', 'hello there'}
 
   describe 'comments', ->
     it 'should mark blocks without override tags as comments', ->
-      expect_tokens '{a}b', 'comment', 'text'
+      expect_tokens '{a}b', {'comment', 'a'}, {'text', 'b'}
     it 'should support mixed comments/tags', ->
-      expect_tokens '{a\\b}c', 'comment', 'tag', 'text'
+      expect_tokens '{a\\b}c', {'comment', 'a'}, {'tag', 'b'}, {'text', 'c'}
 
   describe 'override tags', ->
     it 'should support basic override tags', ->
-      expect_tokens '{\\b1}bold text{\\b0}', 'tag', 'arg', {'text', 9}, 'tag', 'arg'
+      expect_tokens '{\\b1}bold text{\\b0}', {'tag', 'b', '1'}, {'text', 'bold text'}, {'tag', 'b', '0'}
 
     it 'should support \\fn', ->
-      expect_tokens '{\\fnComic Sans MS}text', {'tag', 2}, {'arg', 13}, {'text', 4}
+      expect_tokens '{\\fnComic Sans MS}text', {'tag', 'fn', 'Comic Sans MS'}, {'text', 'text'}
 
     it 'should support multiple arguments to tags', ->
-      expect_tokens '{\\pos(0,0)}a', {'tag', 3}, 'arg', 'arg', 'text'
+      expect_tokens '{\\pos(0,0)}a', {'tag', 'pos', '0', '0'}, {'text', 'a'}
 
     it 'should support gratuitous whitespace', ->
-      expect_tokens '{\\ pos ( 0 , 0 )}a', {'tag', 3}, 'arg', 'arg', 'text'
+      expect_tokens '{\\ pos ( 0 , 0 )}a', {'tag', 'pos', '0', '0'}, {'text', 'a'}
 
     it 'should support color tags', ->
       expect_tokens '{\\c&HFFFFFF&\\2c&H0000FF&\\3c&H000000&}a',
-        'tag', {'arg', 9},
-        {'tag', 2}, {'arg', 9},
-        {'tag', 2}, {'arg', 9},
-        'text'
+        {'tag', 'c', '&HFFFFFF&'},
+        {'tag', '2c', '&H0000FF&'},
+        {'tag', '3c', '&H000000&'},
+        {'text', 'a'}
 
     it 'should trim whitespace from arguments', ->
-      expect_tokens '{\\b 1 }', 'tag', 'arg'
+      expect_tokens '{\\b 1 }', {'tag', 'b', '1'}
 
     it 'should support transforms', ->
-      tokens = ass.lex_dialogue_body '{\\t(0,100,\\clip(1, m 0 0 l 10 10 10 20))}a'
-      expected = {
-        {'tag', 't'}
-        {'arg', '0'}
-        {'arg', '100'}
-        {'block', {
-          {'tag', 'clip'}
-          {'arg', '1'}
-          {'arg', 'm 0 0 l 10 10 10 20'}
-        }}
+      assert\set_parameter 'TableFormatLevel', 4
+      expect_tokens '{\\t(0,100,\\b1\\clip(1, m 0 0 l 10 10 10 20))}a',
+        {'tag', 't', '0', '100', {{'tag', 'b', '1'}, {'tag', 'clip', '1', 'm 0 0 l 10 10 10 20'}}},
         {'text', 'a'}
-      }
-      assert.is.same expected, tokens
+      assert\set_parameter 'TableFormatLevel', 3
 
   describe 'malformed lines', ->
     it 'should mark } with no opening { as text', ->
-      expect_tokens 'a}b', {'text', 3}
+      expect_tokens 'a}b', {'text', 'a}b'}
     it 'should allow missing final )', ->
-      expect_tokens '{\\pos(0,0}a', {'tag', 3}, 'arg', 'arg', 'text'
+      expect_tokens '{\\pos(0,0}a', {'tag', 'pos', '0', '0'}, {'text', 'a'}
